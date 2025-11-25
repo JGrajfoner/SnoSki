@@ -122,7 +122,7 @@ The custom engine follows a modular **Entity-Component-System (ECS)** pattern:
 This project was created as part of a computer graphics course (RGTI) at university.
 
 ## 👤 Author
-
+**JGrajfoner**
 **Tide03**
 
 ---
