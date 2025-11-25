@@ -50,12 +50,20 @@ function createColoredPrimitive(r, g, b, a = 1) {
 // 2) ENTITETE – SVET
 //
 
+// Calculate course length based on gates
+const gateCount = 14;
+const firstGateZ = -40;
+const gateStepZ = -32;
+const lastGateZ = firstGateZ + (gateCount - 1) * gateStepZ;
+const finishZ = lastGateZ - 50;
+const courseLength = Math.abs(finishZ) + 20; // extra buffer
+
 // 2.1. Smučarska proga: zelo široka in dolga "ploskev"
 const slope = new Entity();
 slope.addComponent(new Transform({
-    translation: [0, -1.5, 0],
+    translation: [0, -1.5, finishZ / 2],
     // X = širina, Y = debelina, Z = dolžina
-    scale: [60, 0.2, 600],
+    scale: [60, 0.2, courseLength],
 }));
 slope.addComponent(new Model({
     primitives: [createColoredPrimitive(1.0, 1.0, 1.0, 1)],
@@ -78,11 +86,11 @@ function createTree(x, z, height = 4) {
 // Naključno razmetana drevesa z večjo variabilnostjo
 const trees = [];
 {
-    const treeCount = 50;
-    for (let i = 0; i < treeCount; i++) {
+    let z = -20;
+    while (z > finishZ - 30) { // Generate trees until just before finish
         // Naključna razdalja med drevesi (10-20 enot)
         const spacing = 10 + Math.random() * 10;
-        const z = -20 - i * spacing;
+        z -= spacing;
 
         // Naključno levo/desno
         const side = Math.random() < 0.5 ? -1 : 1;
@@ -135,10 +143,6 @@ function createGatePair(zPos, centerX, isRedGate) {
 // Naredimo več vratc po progi: rdeča, modra, rdeča, modra ...
 const gatePairs = [];
 {
-    const gateCount  = 14; // even count so alternating looks balanced
-    const firstGateZ = -40;
-    const gateStepZ  = -32; // razdalja med vratci
-
     for (let i = 0; i < gateCount; i++) {
         const z = firstGateZ + i * gateStepZ; // gateStepZ je negativen
         const centerX = Math.sin(i * 0.55) * 10; // gladko vijuganje
@@ -151,7 +155,17 @@ const gatePairs = [];
 // Plosko polje vseh entitet vratc (levi + desni) za render in collision
 const gateEntities = gatePairs.flatMap(g => [g.leftGate, g.rightGate]);
 
-// 2.4. Smučar – zdaj z kontrolerjem za premikanje!
+// 2.4. Ciljna črta (finish line)
+const finishLine = new Entity();
+finishLine.addComponent(new Transform({
+    translation: [0, -0.4, finishZ],
+    scale: [30, 0.5, 0.8], // široka črta
+}));
+finishLine.addComponent(new Model({
+    primitives: [createColoredPrimitive(1.0, 0.8, 0.0, 1)], // zlata/rumena barva
+}));
+
+// 2.5. Smučar – zdaj z kontrolerjem za premikanje!
 const skier = new Entity();
 skier.addComponent(new Transform({
     translation: [0, 0.2, 8],
@@ -193,6 +207,7 @@ const scene = [
     skier,
     ...trees,
     ...gateEntities,
+    finishLine,
     cameraEntity,
 ];
 
@@ -222,6 +237,11 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
     const skierTransform = skier.getComponentOfType(Transform);
     if (skierTransform) {
         skierTransform.translation = [0, 0.2, 8];
+    }
+    
+    // Reset all gate passed flags
+    for (const pair of gatePairs) {
+        pair.passed = false;
     }
 });
 
@@ -259,7 +279,7 @@ function update(t, dt) {
             console.log('💥 Hit a gate pole!');
             return;
         }
-    }
+        
         // Preveri, če smo pravkar prešli katera še neobdelana vratca
         for (const pair of gatePairs) {
             if (pair.passed) continue;
@@ -278,6 +298,14 @@ function update(t, dt) {
                 }
             }
         }
+        
+        // Preveri, če je smučar prečkal ciljno črto
+        if (skierTransform.translation[2] <= finishZ) {
+            gameState.gameOver('finish');
+            console.log('🏁 Finished the course!');
+            return;
+        }
+    }
 
     // Kamera sledi smučarju
     const cameraTransform = cameraEntity.getComponentOfType(Transform);

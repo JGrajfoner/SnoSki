@@ -90,6 +90,13 @@ export class GameState {
         // Prikaži game over overlay
         this.gameOverOverlay.style.display = 'flex';
         
+        // Update title based on finish or crash
+        const titleElement = this.gameOverOverlay.querySelector('h1');
+        if (titleElement) {
+            titleElement.textContent = reason === 'finish' ? 'FINISH!' : 'GAME OVER';
+            titleElement.style.color = reason === 'finish' ? '#00ff00' : 'white';
+        }
+        
         // Posodobi končno razdaljo
         const finalDistance = document.getElementById('finalDistance');
         if (finalDistance) {
@@ -107,6 +114,7 @@ export class GameState {
                 'tree': 'You crashed into a tree!',
                 'gate': 'You hit a gate pole!',
                 'miss-gate': 'You missed a gate!',
+                'finish': 'Congratulations! You finished the course! 🏁',
                 'collision': 'You crashed!',
             };
             failReason.textContent = messages[reason] ?? 'Game over.';
