@@ -1,17 +1,35 @@
 import { Transform } from 'engine/core/core.js';
+import { quat } from 'glm';
 
 export class SkierController {
     constructor(entity, domElement, {
-        forwardSpeed = 15,        // hitrost navzdol po progi
-        lateralSpeed = 8,         // hitrost levo/desno
+        maxSpeed = 25,            // maksimalna hitrost
+        minSpeed = 8,             // minimalna hitrost
+        acceleration = 8,         // pospeševanje naprej
+        deceleration = 12,        // zaviranje pri zavijanju
+        lateralSpeed = 12,        // hitrost levo/desno
         maxX = 25,                // meja na levi in desni strani proge
+        turnRotationSpeed = 3.5,  // hitrost rotacije pri zavijanju
+        tiltAmount = 0.35,        // nagib smučarja pri zavijanju
     } = {}) {
         this.entity = entity;
         this.domElement = domElement;
         
-        this.forwardSpeed = forwardSpeed;
+        // Physics parameters
+        this.maxSpeed = maxSpeed;
+        this.minSpeed = minSpeed;
+        this.acceleration = acceleration;
+        this.deceleration = deceleration;
         this.lateralSpeed = lateralSpeed;
         this.maxX = maxX;
+        this.turnRotationSpeed = turnRotationSpeed;
+        this.tiltAmount = tiltAmount;
+        
+        // Current state
+        this.currentSpeed = minSpeed; // Start at minimum speed
+        this.targetRotationY = 0;     // Target Y rotation (heading)
+        this.currentRotationY = 0;    // Current Y rotation
+        this.currentTilt = 0;         // Current roll/tilt angle
         
         this.keys = {};
         
@@ -33,24 +51,75 @@ export class SkierController {
             return;
         }
         
-        // Gibanje levo/desno
-        let lateralMovement = 0;
+        // === 1. INPUT HANDLING ===
+        let lateralInput = 0;
         
         if (this.keys['KeyA'] || this.keys['ArrowLeft']) {
-            lateralMovement -= 1;
+            lateralInput -= 1;
         }
         if (this.keys['KeyD'] || this.keys['ArrowRight']) {
-            lateralMovement += 1;
+            lateralInput += 1;
         }
         
-        // Posodobi X pozicijo (levo/desno)
-        transform.translation[0] += lateralMovement * this.lateralSpeed * dt;
+        // === 2. SPEED DYNAMICS ===
+        // Zaviranje pri zavijanju (večji kot = več zaviranja)
+        const turnIntensity = Math.abs(lateralInput);
         
-        // Omejitev na progi (ne sme iti preveč na rob)
+        if (turnIntensity > 0.1) {
+            // Zavijanje = upočasnitev
+            this.currentSpeed = Math.max(
+                this.minSpeed,
+                this.currentSpeed - this.deceleration * turnIntensity * dt
+            );
+        } else {
+            // Naravnost = pospeševanje
+            this.currentSpeed = Math.min(
+                this.maxSpeed,
+                this.currentSpeed + this.acceleration * dt
+            );
+        }
+        
+        // === 3. ROTATION & TILT ===
+        // Target rotation based on input
+        this.targetRotationY = lateralInput * 0.6; // Max ~35 degrees turn
+        
+        // Smooth rotation interpolation
+        this.currentRotationY += (this.targetRotationY - this.currentRotationY) * this.turnRotationSpeed * dt;
+        
+        // Target tilt (roll) when turning
+        const targetTilt = -lateralInput * this.tiltAmount; // Negative for correct lean direction
+        this.currentTilt += (targetTilt - this.currentTilt) * 4.0 * dt;
+        
+        // Apply rotation to transform (Y-axis rotation for heading, X-axis for tilt)
+        const rotationQuat = quat.create();
+        quat.rotateY(rotationQuat, rotationQuat, this.currentRotationY);
+        quat.rotateX(rotationQuat, rotationQuat, this.currentTilt);
+        transform.rotation = Array.from(rotationQuat);
+        
+        // === 4. LATERAL MOVEMENT ===
+        // Move sideways based on input and current speed
+        const lateralMovement = lateralInput * this.lateralSpeed * dt;
+        transform.translation[0] += lateralMovement;
+        
+        // Clamp to track boundaries
         transform.translation[0] = Math.max(-this.maxX, Math.min(this.maxX, transform.translation[0]));
         
-        // Avtomatično gibanje naprej (navzdol po progi, negativna Z smer)
-        transform.translation[2] -= this.forwardSpeed * dt;
+        // === 5. FORWARD MOVEMENT ===
+        // Move forward at current speed (negative Z direction)
+        transform.translation[2] -= this.currentSpeed * dt;
+    }
+    
+    // Get current speed for external use (e.g., UI display)
+    getCurrentSpeed() {
+        return this.currentSpeed;
+    }
+    
+    // Reset physics state (useful for game restart)
+    reset() {
+        this.currentSpeed = this.minSpeed;
+        this.targetRotationY = 0;
+        this.currentRotationY = 0;
+        this.currentTilt = 0;
     }
     
     keydownHandler(e) {

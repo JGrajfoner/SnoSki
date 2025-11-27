@@ -221,11 +221,16 @@ await renderer.initialize();
 // Ustvari game state manager
 const gameState = new GameState();
 
-// Dodaj kontroler za premikanje smučarja
+// Dodaj kontroler za premikanje smučarja z novimi fizikalnimi parametri
 const skierController = new SkierController(skier, canvas, {
-    forwardSpeed: 15,   // hitrost navzdol
-    lateralSpeed: 10,   // hitrost levo/desno
-    maxX: 25,           // meja za rob proge
+    maxSpeed: 25,           // maksimalna hitrost
+    minSpeed: 8,            // začetna/minimalna hitrost
+    acceleration: 8,        // pospeševanje
+    deceleration: 12,       // zaviranje pri zavijanju
+    lateralSpeed: 12,       // hitrost levo/desno
+    maxX: 25,               // meja za rob proge
+    turnRotationSpeed: 3.5, // hitrost rotacije
+    tiltAmount: 0.35,       // nagib pri zavijanju
 });
 skier.addComponent(skierController);
 
@@ -238,6 +243,9 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
     if (skierTransform) {
         skierTransform.translation = [0, 0.2, 8];
     }
+    
+    // Reset skier physics
+    skierController.reset();
     
     // Reset all gate passed flags
     for (const pair of gatePairs) {
@@ -261,8 +269,9 @@ function update(t, dt) {
     const skierTransform = skier.getComponentOfType(Transform);
     
     if (skierTransform) {
-        // Posodobi game state (razdalja)
-        gameState.update(skierTransform.translation[2]);
+        // Posodobi game state (razdalja in hitrost)
+        const currentSpeed = skierController.getCurrentSpeed();
+        gameState.update(skierTransform.translation[2], currentSpeed);
         
         // Preveri trčenje z drevesi
         const hitTree = checkTreeCollisions(skier, trees);

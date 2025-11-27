@@ -4,6 +4,7 @@ export class GameState {
         this.score = 0; // reserved for future
         this.distance = 0;
         this.gatesPassed = 0;
+        this.speed = 0; // current speed
         
         this.createUI();
     }
@@ -61,14 +62,16 @@ export class GameState {
         this.hud.innerHTML = `
             <div>Distance: <span id="distanceDisplay">0</span> m</div>
             <div>Gates: <span id="gatesDisplay">0</span></div>
+            <div>Speed: <span id="speedDisplay">0</span> m/s</div>
         `;
         document.body.appendChild(this.hud);
     }
     
-    update(skierZ) {
+    update(skierZ, speed = 0) {
         if (this.state === 'playing') {
             // Posodobi razdaljo (z je negativen, zato -z)
             this.distance = Math.max(0, Math.floor(-skierZ));
+            this.speed = speed;
             
             const distanceDisplay = document.getElementById('distanceDisplay');
             if (distanceDisplay) {
@@ -78,6 +81,11 @@ export class GameState {
             const gatesDisplay = document.getElementById('gatesDisplay');
             if (gatesDisplay) {
                 gatesDisplay.textContent = this.gatesPassed;
+            }
+            
+            const speedDisplay = document.getElementById('speedDisplay');
+            if (speedDisplay) {
+                speedDisplay.textContent = Math.round(this.speed);
             }
         }
     }
@@ -128,6 +136,7 @@ export class GameState {
         this.score = 0;
         this.distance = 0;
         this.gatesPassed = 0;
+        this.speed = 0;
         this.gameOverOverlay.style.display = 'none';
     }
     
