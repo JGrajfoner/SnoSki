@@ -12,6 +12,7 @@ import {
 import { UnlitRenderer } from 'engine/renderers/UnlitRenderer.js';
 import { ResizeSystem } from 'engine/systems/ResizeSystem.js';
 import { UpdateSystem } from 'engine/systems/UpdateSystem.js';
+import { ParticleSystem } from 'engine/systems/ParticleSystem.js';
 import { loadResources } from 'engine/loaders/resources.js';
 import { SkierController } from 'engine/controllers/SkierController.js';
 
@@ -175,6 +176,24 @@ skier.addComponent(new Model({
     primitives: [createColoredPrimitive(1.0, 0.9, 0.3, 1)], // rumenkast
 }));
 
+// Dodaj particle system za snežni pršec
+const particleSystem = new ParticleSystem({
+    maxParticles: 150,
+    emissionRate: 30,       // začetna hitrost emisije (dinamično se spreminja)
+    particleLifetime: 0.8,
+    particleSize: 0.2,
+    particleColor: [0.95, 0.95, 1.0, 0.7], // belo-modrinkast sneg
+    spawnOffset: [0, -0.5, 0.3], // za smučarjem
+    velocityRange: {
+        x: [-3, 3],
+        y: [0.2, 1.5],
+        z: [1, 4]  // proti nazaj
+    },
+});
+particleSystem.setMesh(resources.cubeMesh);
+particleSystem.setTexture(snowTexture);
+skier.addComponent(particleSystem);
+
 // 2.5. Kamera – pogled od zgoraj, malo poševno
 const cameraEntity = new Entity();
 
@@ -202,7 +221,7 @@ cameraEntity.addComponent(new Camera({
 //
 // 3) SCENA – seznam entitet
 //
-const scene = [
+let scene = [
     slope,
     skier,
     ...trees,
@@ -210,6 +229,11 @@ const scene = [
     finishLine,
     cameraEntity,
 ];
+
+// Function to get full scene including particle entities
+function getFullScene() {
+    return [...scene, ...particleSystem.getParticleEntities()];
+}
 
 //
 // 4) RENDERER + SISTEMI + GAME STATE
@@ -247,6 +271,10 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
     // Reset skier physics
     skierController.reset();
     
+    // Clear particles
+    particleSystem.clear();
+    particleSystem.setEnabled(true);
+    
     // Reset all gate passed flags
     for (const pair of gatePairs) {
         pair.passed = false;
@@ -256,7 +284,30 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
 function update(t, dt) {
     // Preveri če igra še teče
     if (!gameState.isPlaying()) {
+        // Disable particles when game over
+        particleSystem.setEnabled(false);
         return; // Če je game over, ne posodabljaj več
+    }
+    
+    const skierTransform = skier.getComponentOfType(Transform);
+    
+    // Update particle system BEFORE other components
+    if (skierTransform) {
+        // Dynamic emission rate based on speed and lateral input
+        const currentSpeed = skierController.getCurrentSpeed();
+        const speedRatio = currentSpeed / skierController.maxSpeed;
+        
+        // Check if turning
+        const isTurning = skierController.keys['KeyA'] || skierController.keys['ArrowLeft'] ||
+                         skierController.keys['KeyD'] || skierController.keys['ArrowRight'];
+        
+        // More particles when going fast or turning
+        const baseRate = 20 + speedRatio * 40; // 20-60 particles/sec based on speed
+        const turnBonus = isTurning ? 30 : 0;  // Extra 30 particles/sec when turning
+        particleSystem.emissionRate = baseRate + turnBonus;
+        
+        // Update particle system
+        particleSystem.update(t, dt, skierTransform);
     }
     
     // Univerzalni update za vse komponente, ki definirajo update()
@@ -265,8 +316,6 @@ function update(t, dt) {
             component.update?.(t, dt);
         }
     }
-
-    const skierTransform = skier.getComponentOfType(Transform);
     
     if (skierTransform) {
         // Posodobi game state (razdalja in hitrost)
@@ -329,7 +378,7 @@ function update(t, dt) {
 }
 
 function render() {
-    renderer.render(scene, cameraEntity);
+    renderer.render(getFullScene(), cameraEntity);
 }
 
 function resize({ displaySize: { width, height } }) {
