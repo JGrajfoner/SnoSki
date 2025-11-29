@@ -193,51 +193,53 @@ export class GLTFLoader {
     }
 
     loadMaterial(nameOrIndex) {
-        const gltfSpec = this.findByNameOrIndex(this.gltf.materials, nameOrIndex);
-        if (!gltfSpec) {
-            return null;
-        }
-        if (this.cache.has(gltfSpec)) {
-            return this.cache.get(gltfSpec);
+    const gltfSpec = this.findByNameOrIndex(this.gltf.materials, nameOrIndex);
+    if (!gltfSpec) {
+        return null;
+    }
+    if (this.cache.has(gltfSpec)) {
+        return this.cache.get(gltfSpec);
+    }
+
+    const options = {};
+    const pbr = gltfSpec.pbrMetallicRoughness;
+
+    if (pbr) {
+        // 1) baseColorTexture, če obstaja
+        if (pbr.baseColorTexture) {
+            options.baseTexture = this.loadTexture(pbr.baseColorTexture.index);
+            options.baseTexture.isSRGB = true;
         }
 
-        const options = {};
-        const pbr = gltfSpec.pbrMetallicRoughness;
-        if (pbr) {
-            if (pbr.baseColorTexture) {
-                options.baseTexture = this.loadTexture(pbr.baseColorTexture.index);
+        // 2) metallicRoughnessTexture
+        if (pbr.metallicRoughnessTexture) {
+            options.metalnessTexture = this.loadTexture(pbr.metallicRoughnessTexture.index);
+            options.roughnessTexture = this.loadTexture(pbr.metallicRoughnessTexture.index);
+
+            // Če še vedno nimamo baseTexture, ga uporabi kot fallback
+            if (!options.baseTexture) {
+                options.baseTexture = this.loadTexture(pbr.metallicRoughnessTexture.index);
                 options.baseTexture.isSRGB = true;
             }
-            if (pbr.metallicRoughnessTexture) {
-                options.metalnessTexture = this.loadTexture(pbr.metallicRoughnessTexture.index);
-                options.roughnessTexture = this.loadTexture(pbr.metallicRoughnessTexture.index);
-            }
-            options.baseFactor = pbr.baseColorFactor;
-            options.metalnessFactor = pbr.metallicFactor;
-            options.roughnessFactor = pbr.roughnessFactor;
         }
 
-        if (gltfSpec.normalTexture) {
-            options.normalTexture = this.loadTexture(gltfSpec.normalTexture.index);
-            options.normalFactor = gltfSpec.normalTexture.scale;
-        }
-
-        if (gltfSpec.emissiveTexture) {
-            options.emissionTexture = this.loadTexture(gltfSpec.emissiveTexture.index);
-            options.emissionTexture.isSRGB = true;
-            options.emissionFactor = gltfSpec.emissiveFactor;
-        }
-
-        if (gltfSpec.occlusionTexture) {
-            options.occlusionTexture = this.loadTexture(gltfSpec.occlusionTexture.index);
-            options.occlusionFactor = gltfSpec.occlusionTexture.strength;
-        }
-
-        const material = new Material(options);
-
-        this.cache.set(gltfSpec, material);
-        return material;
+        options.baseFactor = pbr.baseColorFactor ?? [1, 1, 1, 1];
+        options.metalnessFactor = pbr.metallicFactor ?? 0;
+        options.roughnessFactor = pbr.roughnessFactor ?? 1;
     }
+
+    // Če PBR sploh ni ali še vedno nimamo baseTexture → uporabi prvo teksturo v sceni
+    if (!options.baseTexture && this.gltf.textures && this.gltf.textures.length > 0) {
+        options.baseTexture = this.loadTexture(0);
+        options.baseTexture.isSRGB = true;
+    }
+
+    const material = new Material(options);
+
+    this.cache.set(gltfSpec, material);
+    return material;
+    }
+
 
     loadAccessor(nameOrIndex) {
         const gltfSpec = this.findByNameOrIndex(this.gltf.accessors, nameOrIndex);

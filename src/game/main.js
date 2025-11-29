@@ -18,6 +18,7 @@ import { SkierController } from 'engine/controllers/SkierController.js';
 
 import { GameState } from './GameState.js';
 import { checkTreeCollisions, checkGateCollisions } from './CollisionDetection.js';
+import { GLTFLoader } from 'engine/loaders/GLTFLoader.js';
 
 //
 // 1) NALOŽIMO MESH IN SNEŽNO TEKSTURO
@@ -26,6 +27,22 @@ const resources = await loadResources({
     cubeMesh: new URL('../models/cube/cube.json', import.meta.url),
     snowTex:  new URL('../models/snow/Snow010A_2K-JPG_Color.jpg', import.meta.url),
 });
+
+const treeLoader = new GLTFLoader();
+await treeLoader.load(new URL('../models/tree/scene.gltf', import.meta.url));
+
+const treePrimitives = [];
+if (treeLoader.gltf.meshes) {
+    for (let i = 0; i < treeLoader.gltf.meshes.length; i++) {
+        const model = treeLoader.loadMesh(i); // vrne Model
+        if (model && model.primitives) {
+            treePrimitives.push(...model.primitives);
+        }
+    }
+}
+
+console.log('Loaded tree primitives:', treePrimitives.length);
+
 
 // enotni sampler + tekstura (sneg) za vse objekte
 const snowTexture = new Texture({
@@ -70,7 +87,7 @@ slope.addComponent(new Model({
     primitives: [createColoredPrimitive(1.0, 1.0, 1.0, 1)],
 }));
 
-// 2.2. Drevesa ob robu proge
+/* 2.2. Drevesa ob robu proge
 function createTree(x, z, height = 4) {
     const tree = new Entity();
     tree.addComponent(new Transform({
@@ -82,7 +99,29 @@ function createTree(x, z, height = 4) {
         primitives: [createColoredPrimitive(0.2, 0.6, 0.2, 1)],
     }));
     return tree;
+}*/
+
+function createTree (x, z, height = 4) {
+    const tree = new Entity();
+
+    const baseHeight = 4;
+    const uniformScale = height / baseHeight;
+
+    tree.addComponent(new Transform({
+        translation: [x, -0.2, z],
+        // rotacija -90° okoli X osi - lokalni Z (drevo) postane svetovni +Y
+        rotation: [-0.707, 0, 0, 0.707],
+        scale: [uniformScale, uniformScale, uniformScale],
+    }));
+
+    tree.addComponent(new Model({
+        primitives: treePrimitives,
+    }));
+    return tree;
 }
+
+
+
 
 // Naključno razmetana drevesa z večjo variabilnostjo
 const trees = [];
@@ -90,7 +129,7 @@ const trees = [];
     let z = -20;
     while (z > finishZ - 30) { // Generate trees until just before finish
         // Naključna razdalja med drevesi (10-20 enot)
-        const spacing = 10 + Math.random() * 10;
+        const spacing = 0 + Math.random() * 5;
         z -= spacing;
 
         // Naključno levo/desno
