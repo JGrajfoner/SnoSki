@@ -7,6 +7,7 @@ import {
     Sampler,
     Texture,
     Transform,
+    Parent,
 } from 'engine/core/core.js';
 
 import { UnlitRenderer } from 'engine/renderers/UnlitRenderer.js';
@@ -19,6 +20,7 @@ import { SkierController } from 'engine/controllers/SkierController.js';
 import { GameState } from './GameState.js';
 import { checkTreeCollisions, checkGateCollisions } from './CollisionDetection.js';
 import { GLTFLoader } from 'engine/loaders/GLTFLoader.js';
+
 
 //
 // 1) NALOŽIMO MESH IN SNEŽNO TEKSTURO
@@ -42,6 +44,21 @@ if (treeLoader.gltf.meshes) {
 }
 
 console.log('Loaded tree primitives:', treePrimitives.length);
+
+
+const skierLoader = new GLTFLoader();
+await skierLoader.load(new URL('../models/skier/scene.gltf', import.meta.url));
+
+let skierPrimitives = [];
+
+if (skierLoader.gltf.meshes) {
+    for (let i = 0; i < skierLoader.gltf.meshes.length; i++) {
+        const model = skierLoader.loadMesh(i); // vrne Model
+        if (model && model.primitives) {
+            skierPrimitives.push(...model.primitives);
+        }
+    }
+}
 
 
 // enotni sampler + tekstura (sneg) za vse objekte
@@ -208,12 +225,27 @@ finishLine.addComponent(new Model({
 // 2.5. Smučar – zdaj z kontrolerjem za premikanje!
 const skier = new Entity();
 skier.addComponent(new Transform({
-    translation: [0, 0.2, 8],
-    scale: [0.7, 1.3, 0.7],
+    translation: [0, 0.15, 8],
+    rotation: [0, 0, 0, 1],     // nevtralna rotacija
+    scale: [1, 1, 1],           // scale raje nastavljamo na child
 }));
-skier.addComponent(new Model({
-    primitives: [createColoredPrimitive(1.0, 0.9, 0.3, 1)], // rumenkast
+
+const skierModel = new Entity();
+skierModel.name = "skierModel";
+skierModel.addComponent(new Transform({
+    translation: [0, 0, 0],
+    rotation: [0, 0.707, 0.707, 0],   // -90° okoli X da stoji pokonci
+    scale: [0.5, 0.5, 0.5],              // pravilna velikost smučarja
 }));
+
+skierModel.addComponent(new Model({
+    primitives: skierPrimitives,
+}));
+
+// Poveži model pod glavno entiteto
+skierModel.addComponent(new Parent(skier));
+//scene.push(skierModel);
+
 
 // Dodaj particle system za snežni pršec
 const particleSystem = new ParticleSystem({
@@ -233,7 +265,7 @@ particleSystem.setMesh(resources.cubeMesh);
 particleSystem.setTexture(snowTexture);
 skier.addComponent(particleSystem);
 
-// 2.5. Kamera – pogled od zgoraj, malo poševno
+// 2.6. Kamera – pogled od zgoraj, malo poševno
 const cameraEntity = new Entity();
 
 const cameraAngle = -0.4; // radiani; negativen = gleda navzdol
@@ -263,6 +295,7 @@ cameraEntity.addComponent(new Camera({
 let scene = [
     slope,
     skier,
+    skierModel,
     ...trees,
     ...gateEntities,
     finishLine,
