@@ -16,7 +16,8 @@ class Particle {
         this.active = true;
     }
     
-    update(dt) {
+    update(t, dt, parentTransform) {
+        if (!this.enabled || !parentTransform) return;
         if (!this.active) return;
         
         this.age += dt;
@@ -92,7 +93,7 @@ export class ParticleSystem {
     }
     
     emit(parentTransform, count = 1) {
-        if (!this.mesh) return;
+        if (!this.mesh || !parentTransform) return; 
         
         for (let i = 0; i < count && this.particles.length < this.maxParticles; i++) {
             const particle = this.createParticle(parentTransform);
