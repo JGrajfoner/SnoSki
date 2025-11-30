@@ -122,7 +122,7 @@ export class UnlitRenderer extends BaseRenderer {
             return this.gpuObjects.get(texture);
         }
 
-        const { gpuTexture } = this.prepareImage(texture.image); // ignore sRGB
+        const { gpuTexture } = this.prepareImage(texture.image, texture.isSRGB); // ignore sRGB
         const { gpuSampler } = this.prepareSampler(texture.sampler);
 
         const gpuObjects = { gpuTexture, gpuSampler };
