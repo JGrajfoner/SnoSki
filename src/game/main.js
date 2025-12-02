@@ -60,6 +60,21 @@ if (skierLoader.gltf.meshes) {
     }
 }
 
+const finishLoader = new GLTFLoader();
+await finishLoader.load(new URL('../models/finish2/Untitled.gltf', import.meta.url));
+
+let finishPrimitives = [];
+if (finishLoader.gltf.meshes) {
+    console.log('finish meshes:', finishLoader.gltf.meshes.length);
+    for (let i = 0; i < finishLoader.gltf.meshes.length; i++) {
+        const model = finishLoader.loadMesh(i);
+        if (model && model.primitives) {
+            finishPrimitives.push(...model.primitives);
+        }
+    }
+}
+
+console.log('Loaded finish gate primitives:', finishPrimitives.length);
 
 // enotni sampler + tekstura (sneg) za vse objekte
 const snowTexture = new Texture({
@@ -172,8 +187,6 @@ function createGatePair(zPos, centerX, isRedGate) {
     const red  = [1.0, 0.1, 0.1, 1];
     const blue = [0.1, 0.3, 1.0, 1];
 
-    // če je isRedGate = true → OBEDVI palici rdeči
-    // če je isRedGate = false → OBEDVI palici modri
     const color = isRedGate ? red : blue;
 
     const leftGate = new Entity();
@@ -212,14 +225,27 @@ const gatePairs = [];
 // Plosko polje vseh entitet vratc (levi + desni) za render in collision
 const gateEntities = gatePairs.flatMap(g => [g.leftGate, g.rightGate]);
 
+
 // 2.4. Ciljna črta (finish line)
 const finishLine = new Entity();
 finishLine.addComponent(new Transform({
-    translation: [0, -0.4, finishZ],
-    scale: [30, 0.5, 0.8], // široka črta
+    translation: [0, -1.45, finishZ],
+    scale: [30, 0.2, 0.8], // široka črta
 }));
 finishLine.addComponent(new Model({
     primitives: [createColoredPrimitive(1.0, 0.8, 0.0, 1)], // zlata/rumena barva
+}));
+
+
+// 2.4b Finish gate (nad črto)
+const finishGate = new Entity();
+finishGate.addComponent(new Transform({
+    translation: [0, 0.2, finishZ], 
+    rotation: [0, 0, 0, 0.707],
+    scale: [3, 3, 3],
+}));
+finishGate.addComponent(new Model({
+    primitives: finishPrimitives,
 }));
 
 // 2.5. Smučar – zdaj z kontrolerjem za premikanje!
@@ -285,7 +311,7 @@ cameraEntity.addComponent(new Transform({
 cameraEntity.addComponent(new Camera({
     aspect: 1,   // v resize() nastavimo pravo razmerje
     fovy:   0.9,
-    near:   0.1,
+    near:   0.3,
     far:    400.0,
 }));
 
@@ -298,7 +324,8 @@ let scene = [
     skierModel,
     ...trees,
     ...gateEntities,
-    finishLine,
+    //finishLine,
+    finishGate,
     cameraEntity,
 ];
 

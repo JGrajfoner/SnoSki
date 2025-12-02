@@ -81,13 +81,15 @@ export class SkierController {
         
         // === 3. ROTATION & TILT ===
         // Target rotation based on input
-        this.targetRotationY = lateralInput * 0.6; // Max ~35 degrees turn
+        // Invert sign so positive lateralInput (move right) yields a rightward yaw
+        this.targetRotationY = -lateralInput * 0.6; // Max ~35 degrees turn
         
         // Smooth rotation interpolation
         this.currentRotationY += (this.targetRotationY - this.currentRotationY) * this.turnRotationSpeed * dt;
         
         // Target tilt (roll) when turning
-        const targetTilt = -lateralInput * this.tiltAmount; // Negative for correct lean direction
+        // Match tilt direction with input (lean into the turn)
+        const targetTilt = lateralInput * this.tiltAmount;
         this.currentTilt += (targetTilt - this.currentTilt) * 4.0 * dt;
         
         // Apply rotation to transform (Y-axis rotation for heading, X-axis for tilt)
