@@ -319,8 +319,8 @@ skierModel.addComponent(new Parent(skier));
 
 // Dodaj particle system za snežni pršec
 const particleSystem = new ParticleSystem({
-    maxParticles: 150,
-    emissionRate: 30,       // začetna hitrost emisije (dinamično se spreminja)
+    maxParticles: 2000,       // povečano na 2000 za dolgo sled skozi celotno igro
+    emissionRate: 30,         // začetna hitrost emisije (dinamično se spreminja)
     particleLifetime: 0.8,
     particleSize: 0.2,
     particleColor: [0.95, 0.95, 1.0, 0.7], // belo-modrinkast sneg
@@ -421,6 +421,15 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
     // Reset all gate passed flags
     for (const pair of gatePairs) {
         pair.passed = false;
+    }
+});
+
+// Dodaj spacebar za restart
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !gameState.isPlaying()) {
+        // Samo spacebar za restart pri game over
+        e.preventDefault();
+        document.getElementById('restartButton')?.click();
     }
 });
 
