@@ -5,7 +5,11 @@ export class GameState {
         this.distance = 0;
         this.gatesPassed = 0;
         this.speed = 0; // current speed
-        this.coins = 0;
+        this.coins = 0;   
+
+        this.currentRunPath = [];
+        this.lastRunPath = [];
+
         this.createUI();
     }
     
@@ -100,6 +104,9 @@ export class GameState {
         if (this.state === 'gameover') return;
         
         this.state = 'gameover';
+
+        this.lastRunPath = this.currentRunPath.slice();
+        this.currentRunPath = [];
         
         // Prikaži game over overlay
         this.gameOverOverlay.style.display = 'flex';
@@ -134,6 +141,10 @@ export class GameState {
             failReason.textContent = messages[reason] ?? 'Game over.';
         }
         
+        this.lastRunPath = this.currentPath.slice();
+        this.currentRunPath = [];
+
+
         console.log(`Game Over! Reason: ${reason}, Distance: ${this.distance}m`);
     }
     
@@ -145,10 +156,13 @@ export class GameState {
         this.speed = 0;
         this.gameOverOverlay.style.display = 'none';
         this.coins = 0;
+        this.currentRunPath = [];
         this.gameOverOverlay.style.display = 'none';
 
         const coinsDisplay = document.getElementById('coinsDisplay');
         if (coinsDisplay) coinsDisplay.textContent = 0;
+
+      
     }
     
     isPlaying() {

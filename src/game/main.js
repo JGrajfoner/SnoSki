@@ -22,6 +22,9 @@ import { checkTreeCollisions, checkGateCollisions } from './CollisionDetection.j
 import { GLTFLoader } from 'engine/loaders/GLTFLoader.js';
 import { quatMultiply, quatFromAxisAngle } from '../engine/core/Quat.js';
 
+let skierPrimitives = [];
+let ghostSkier = null;
+let ghostIndex = 0;
 
 //
 // 1) NALOŽIMO MESH IN SNEŽNO TEKSTURO
@@ -50,7 +53,8 @@ console.log('Loaded tree primitives:', treePrimitives.length);
 const skierLoader = new GLTFLoader();
 await skierLoader.load(new URL('../models/skier/scene.gltf', import.meta.url));
 
-let skierPrimitives = [];
+
+
 
 if (skierLoader.gltf.meshes) {
     for (let i = 0; i < skierLoader.gltf.meshes.length; i++) {
@@ -375,6 +379,32 @@ skierModel.addComponent(new Model({
     primitives: skierPrimitives,
 }));
 
+function createGhostSkier() {
+    const ghost = new Entity();
+
+    ghost.addComponent(new Transform({
+        translation: [0, 0, 0],
+        rotation: [0, 0.707, 0.707, 0],   // -90° okoli X da stoji pokonci
+        scale: [0.5, 0.5, 0.5],              // pravilna velikost smučarja
+    }));
+
+    // Use same skier mesh
+    ghost.addComponent(new Model({
+        primitives: skierPrimitives.map(p => {
+            return new Primitive({
+                mesh: p.mesh,
+                material: new Material({
+                    baseTexture: p.material.baseTexture,
+                    baseFactor: [1, 1, 1, 0.2], // transparent ghost
+                })
+            });
+        })
+    }));
+
+    return ghost;
+}
+
+
 // Poveži model pod glavno entiteto
 skierModel.addComponent(new Parent(skier));
 //scene.push(skierModel);
@@ -467,6 +497,13 @@ skier.addComponent(skierController);
 
 // Dodaj restart funkcionalnost
 document.getElementById('restartButton')?.addEventListener('click', () => {
+     // --- REMOVE OLD GHOST ---
+    if (ghostSkier) {
+        const idx = scene.indexOf(ghostSkier);
+        if (idx !== -1) scene.splice(idx, 1);
+        ghostSkier = null;
+    }
+    
     gameState.reset();
     
     // Reset skier position
@@ -477,6 +514,13 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
     
     // Reset skier physics
     skierController.reset();
+
+    //aktiviraj duha, če imamo zadnjo rundo igre
+    if (gameState.lastRunPath && gameState.lastRunPath.length > 0) {
+        ghostSkier = createGhostSkier();
+        scene.push(ghostSkier);
+        ghostIndex = 0;
+    }
     
     // Clear particles
     particleSystem.clear();
@@ -506,6 +550,14 @@ function update(t, dt) {
     }
     
     const skierTransform = skier.getComponentOfType(Transform);
+
+    if (gameState.isPlaying() && skierTransform) {
+        gameState.currentRunPath.push({
+            x: skierTransform.translation[0],
+            y: skierTransform.translation[1],
+            z: skierTransform.translation[2],
+        })
+    }
     
     // Update particle system BEFORE other components
     if (skierTransform) {
@@ -632,16 +684,28 @@ function update(t, dt) {
     }
 
     // --- REMOVE COLLECTED COINS SAFELY ---
-if (coinsToRemove.length > 0) {
-    for (const coin of coinsToRemove) {
-        const idxScene = scene.indexOf(coin);
-        if (idxScene !== -1) scene.splice(idxScene, 1);
+    if (coinsToRemove.length > 0) {
+        for (const coin of coinsToRemove) {
+            const idxScene = scene.indexOf(coin);
+            if (idxScene !== -1) scene.splice(idxScene, 1);
 
-        const idxCoins = coins.indexOf(coin);
-        if (idxCoins !== -1) coins.splice(idxCoins, 1);
+            const idxCoins = coins.indexOf(coin);
+            if (idxCoins !== -1) coins.splice(idxCoins, 1);
+        }
+        coinsToRemove.length = 0;
     }
-    coinsToRemove.length = 0;
-}
+
+    // --- GHOST REPLAY ---
+    if (ghostSkier && gameState.lastRunPath) {
+        const frame = gameState.lastRunPath[ghostIndex];
+        if (frame) {
+            const tr = ghostSkier.getComponentOfType(Transform);
+            tr.translation[0] = frame.x;
+            tr.translation[1] = frame.y;
+            tr.translation[2] = frame.z;
+            ghostIndex++;
+        }
+    }
 
 
     // Kamera sledi smučarju
