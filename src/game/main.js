@@ -96,6 +96,35 @@ function createColoredPrimitive(r, g, b, a = 1) {
     });
 }
 
+// Funkcija za posodobitev flash animacije vratc
+function updateGateFlash(gatePair, dt) {
+    if (gatePair.flashTime > 0) {
+        gatePair.flashTime -= dt;
+        
+        // Izračunaj intenziteto flasha (1 na začetku, 0 na koncu)
+        const flashIntensity = Math.max(0, gatePair.flashTime / gatePair.flashDuration);
+        
+        // Interpoliraj med originalno barvo in belo
+        const [origR, origG, origB, origA] = gatePair.originalColor;
+        const whiteR = 1.0, whiteG = 1.0, whiteB = 1.0;
+        
+        const flashR = origR + (whiteR - origR) * flashIntensity;
+        const flashG = origG + (whiteG - origG) * flashIntensity;
+        const flashB = origB + (whiteB - origB) * flashIntensity;
+        
+        // Posodobi barvo obeh palic
+        const leftModel = gatePair.leftGate.getComponentOfType(Model);
+        const rightModel = gatePair.rightGate.getComponentOfType(Model);
+        
+        if (leftModel && leftModel.primitives[0]) {
+            leftModel.primitives[0].material.baseFactor = [flashR, flashG, flashB, origA];
+        }
+        if (rightModel && rightModel.primitives[0]) {
+            rightModel.primitives[0].material.baseFactor = [flashR, flashG, flashB, origA];
+        }
+    }
+}
+
 //
 // 2) ENTITETE – SVET
 //
@@ -207,15 +236,30 @@ function createGatePair(zPos, centerX, isRedGate) {
         primitives: [createColoredPrimitive(...color)],
     }));
 
-    return { leftGate, rightGate, z: zPos, centerX, halfWidth: gateHalfWidth, isRedGate, passed: false };
+    return { 
+        leftGate, 
+        rightGate, 
+        z: zPos, 
+        centerX, 
+        halfWidth: gateHalfWidth, 
+        isRedGate, 
+        passed: false,
+        originalColor: color,
+        flashTime: 0,          // trenutna čas flasha
+        flashDuration: 0.3,    // trajanje flasha (v sekundah)
+    };
 }
 
 // Naredimo več vratc po progi: rdeča, modra, rdeča, modra ...
+// Vsaka vrata ima naključno horizontalno pozicijo za večjo zanimivost
+// Vratca ostanejo znotraj mejnih dreves (≈ ±15 enot od centra)
 const gatePairs = [];
 {
+    const maxHorizontalRange = 14; // Ostani znotraj ±15 (približna pozicija najbližjih dreves)
     for (let i = 0; i < gateCount; i++) {
         const z = firstGateZ + i * gateStepZ; // gateStepZ je negativen
-        const centerX = Math.sin(i * 0.55) * 10; // gladko vijuganje
+        // Naključna horizontalna pozicija med -14 in +14
+        const centerX = (Math.random() - 0.5) * 2 * maxHorizontalRange;
         const isRedGate = (i % 2 === 0); // izmenično rdeča / modra
         const gatePair = createGatePair(z, centerX, isRedGate);
         gatePairs.push(gatePair);
@@ -416,6 +460,11 @@ function update(t, dt) {
         }
     }
     
+    // Posodobi flash animacije vseh vratc
+    for (const pair of gatePairs) {
+        updateGateFlash(pair, dt);
+    }
+    
     if (skierTransform) {
         // Posodobi game state (razdalja in hitrost)
         const currentSpeed = skierController.getCurrentSpeed();
@@ -446,6 +495,8 @@ function update(t, dt) {
                 const x = skierTransform.translation[0];
                 const withinGate = (x >= pair.centerX - pair.halfWidth) && (x <= pair.centerX + pair.halfWidth);
                 if (withinGate) {
+                    // Sproži flash animacijo
+                    pair.flashTime = pair.flashDuration;
                     gameState.gatePassed();
                 } else {
                     // Zgrešil vratca
