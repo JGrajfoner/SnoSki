@@ -5,7 +5,7 @@ export class GameState {
         this.distance = 0;
         this.gatesPassed = 0;
         this.speed = 0; // current speed
-        
+        this.coins = 0;
         this.createUI();
     }
     
@@ -63,6 +63,7 @@ export class GameState {
             <div>Distance: <span id="distanceDisplay">0</span> m</div>
             <div>Gates: <span id="gatesDisplay">0</span></div>
             <div>Speed: <span id="speedDisplay">0</span> m/s</div>
+            <div>Coins: <span id="coinsDisplay">0</span> 🪙</div>
         `;
         document.body.appendChild(this.hud);
     }
@@ -87,6 +88,11 @@ export class GameState {
             if (speedDisplay) {
                 speedDisplay.textContent = Math.round(this.speed);
             }
+            const coinsDisplay = document.getElementById('coinsDisplay');
+            if (coinsDisplay) {
+            coinsDisplay.textContent = this.coins;
+            }
+
         }
     }
     
@@ -138,6 +144,11 @@ export class GameState {
         this.gatesPassed = 0;
         this.speed = 0;
         this.gameOverOverlay.style.display = 'none';
+        this.coins = 0;
+        this.gameOverOverlay.style.display = 'none';
+
+        const coinsDisplay = document.getElementById('coinsDisplay');
+        if (coinsDisplay) coinsDisplay.textContent = 0;
     }
     
     isPlaying() {

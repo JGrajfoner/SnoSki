@@ -138,7 +138,7 @@ export class UnlitRenderer extends BaseRenderer {
         const baseTexture = this.prepareTexture(material.baseTexture);
 
         const materialUniformBuffer = this.device.createBuffer({
-            size: 16,
+            size: 32,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
 
@@ -219,6 +219,15 @@ export class UnlitRenderer extends BaseRenderer {
     renderPrimitive(primitive) {
         const { materialUniformBuffer, materialBindGroup } = this.prepareMaterial(primitive.material);
         this.device.queue.writeBuffer(materialUniformBuffer, 0, new Float32Array(primitive.material.baseFactor));
+
+        if (!primitive.material.uvScale) primitive.material.uvScale = [1, 1];
+
+        this.device.queue.writeBuffer(
+            materialUniformBuffer,
+            16, 
+            new Float32Array(primitive.material.uvScale)
+        );
+
         this.renderPass.setBindGroup(2, materialBindGroup);
 
         const { vertexBuffer, indexBuffer } = this.prepareMesh(primitive.mesh, vertexBufferLayout);
