@@ -20,6 +20,7 @@ import { SkierController } from 'engine/controllers/SkierController.js';
 import { GameState } from './GameState.js';
 import { checkTreeCollisions, checkGateCollisions } from './CollisionDetection.js';
 import { GLTFLoader } from 'engine/loaders/GLTFLoader.js';
+import { quatMultiply, quatFromAxisAngle } from '../engine/core/Quat.js';
 
 
 //
@@ -75,6 +76,46 @@ if (finishLoader.gltf.meshes) {
 }
 
 console.log('Loaded finish gate primitives:', finishPrimitives.length);
+
+
+
+
+const coinLoader = new GLTFLoader();
+await coinLoader.load(new URL('../models/coin/scene.gltf', import.meta.url));
+
+let coinPrimitives = [];
+if (coinLoader.gltf.meshes) {
+    console.log('coin meshes:', coinLoader.gltf.meshes.length);
+    for (let i = 0; i < coinLoader.gltf.meshes.length; i++) {
+        const model = coinLoader.loadMesh(i);
+        if (model && model.primitives) {
+            coinPrimitives.push(...model.primitives);
+        }
+    }
+}
+
+//coin factory
+
+function createCoin(x, z) {
+    const coin = new Entity();
+
+    coin.addComponent(new Transform({
+        translation: [x, 0.2, z],
+        rotation: [0, 0, 0, 1],
+        scale: [1.5, 1.5, 1.5],
+    }));
+
+    coin.addComponent(new Model({
+        primitives: coinPrimitives,
+    }));
+
+    coin.collected = false;
+
+    return coin;
+}
+
+const coinsToRemove = [];
+
 
 // enotni sampler + tekstura (sneg) za vse objekte
 const snowTexture = new Texture({
@@ -145,7 +186,16 @@ slope.addComponent(new Transform({
     scale: [60, 0.2, courseLength],
 }));
 slope.addComponent(new Model({
-    primitives: [createColoredPrimitive(1.0, 1.0, 1.0, 1)],
+    primitives: [
+        new Primitive({
+            mesh: resources.cubeMesh,
+            material: new Material({
+                baseTexture: snowTexture,
+                baseFactor: [1, 1, 1, 1],
+                uvScale: [12, 60], // Tile snow texture (X = width, Y = length)
+            }),
+        })
+    ],
 }));
 
 /* 2.2. Drevesa ob robu proge
@@ -270,6 +320,19 @@ const gatePairs = [];
 const gateEntities = gatePairs.flatMap(g => [g.leftGate, g.rightGate]);
 
 
+
+const coins = [];
+{
+    let z = -20;
+    while (z > finishZ + 20) {
+        z -= 20 + Math.random() * 20;
+        const x = (Math.random() - 0.5) * 12;
+        coins.push(createCoin(x,z))
+    }
+}
+console.log('Spawned coins: ', coins.length);
+
+
 // 2.4. Ciljna črta (finish line)
 const finishLine = new Entity();
 finishLine.addComponent(new Transform({
@@ -369,6 +432,7 @@ let scene = [
     ...trees,
     ...gateEntities,
     //finishLine,
+    ...coins,
     finishGate,
     cameraEntity,
 ];
@@ -473,7 +537,30 @@ function update(t, dt) {
     for (const pair of gatePairs) {
         updateGateFlash(pair, dt);
     }
-    
+
+    // COIN UPDATE (spin + billboard yaw)
+    const camTransform = cameraEntity.getComponentOfType(Transform);
+
+    for (const coin of coins) {
+        if (coin.collected) continue;
+
+        const tr = coin.getComponentOfType(Transform);
+        if (!tr || !camTransform) continue;
+
+        // Billboard yaw
+        const dx = camTransform.translation[0] - tr.translation[0];
+        const dz = camTransform.translation[2] - tr.translation[2];
+        const yaw = Math.atan2(dx, dz);   // angle around Y
+
+        const billboardQ = quatFromAxisAngle([0, 1, 0], yaw);
+
+        const spinSpeed = 2.0;           
+        const spinQ = quatFromAxisAngle([0, 1, 0], t * spinSpeed);
+
+        // Combined rotation = billboard * spin
+        tr.rotation = quatMultiply(billboardQ, spinQ);
+    }
+
     if (skierTransform) {
         // Posodobi game state (razdalja in hitrost)
         const currentSpeed = skierController.getCurrentSpeed();
@@ -494,6 +581,26 @@ function update(t, dt) {
             console.log('💥 Hit a gate pole!');
             return;
         }
+
+         // --- COIN COLLISION ---
+        for (const coin of coins) {
+            if (coin.collected) continue;
+
+            const tr = coin.getComponentOfType(Transform);
+
+            const dx = tr.translation[0] - skierTransform.translation[0];
+            const dz = tr.translation[2] - skierTransform.translation[2];
+
+            // Simple hitbox (~1 meter)
+            if (Math.abs(dx) < 1.0 && Math.abs(dz) < 1.0) {
+                coin.collected = true;
+                coinsToRemove.push(coin);   // mark for removal
+                gameState.coins++;
+
+                console.log("🪙 Coin collected! Total:", gameState.coins);
+            }
+        }
+
         
         // Preveri, če smo pravkar prešli katera še neobdelana vratca
         for (const pair of gatePairs) {
@@ -523,6 +630,19 @@ function update(t, dt) {
             return;
         }
     }
+
+    // --- REMOVE COLLECTED COINS SAFELY ---
+if (coinsToRemove.length > 0) {
+    for (const coin of coinsToRemove) {
+        const idxScene = scene.indexOf(coin);
+        if (idxScene !== -1) scene.splice(idxScene, 1);
+
+        const idxCoins = coins.indexOf(coin);
+        if (idxCoins !== -1) coins.splice(idxCoins, 1);
+    }
+    coinsToRemove.length = 0;
+}
+
 
     // Kamera sledi smučarju
     const cameraTransform = cameraEntity.getComponentOfType(Transform);

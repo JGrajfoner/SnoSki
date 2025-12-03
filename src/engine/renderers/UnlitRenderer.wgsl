@@ -28,6 +28,7 @@ struct ModelUniforms {
 
 struct MaterialUniforms {
     baseFactor: vec4f,
+    uvScale: vec2f,
 }
 
 @group(0) @binding(0) var<uniform> camera: CameraUniforms;
@@ -52,7 +53,7 @@ fn vertex(input: VertexInput) -> VertexOutput {
 fn fragment(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
-    output.color = textureSample(baseTexture, baseSampler, input.texcoords) * material.baseFactor;
-
+    let scaledUV = input.texcoords * material.uvScale;
+    output.color = textureSample(baseTexture, baseSampler, scaledUV) * material.baseFactor;
     return output;
 }
