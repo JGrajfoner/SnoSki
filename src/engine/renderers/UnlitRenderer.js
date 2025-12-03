@@ -52,7 +52,21 @@ export class UnlitRenderer extends BaseRenderer {
             },
             fragment: {
                 module,
-                targets: [{ format: this.format }],
+                targets: [{
+                    format: this.format,
+                    blend: {
+                        color: {
+                            srcFactor: 'src-alpha',
+                            dstFactor: 'one-minus-src-alpha',
+                            operation: 'add',
+                        },
+                        alpha: {
+                            srcFactor: 'one',
+                            dstFactor: 'one-minus-src-alpha',
+                            operation: 'add',
+                        }
+                    }
+                }],
             },
             depthStencil: {
                 format: 'depth24plus',
