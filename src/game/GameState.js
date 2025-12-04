@@ -135,14 +135,13 @@ export class GameState {
                 'tree': 'You crashed into a tree!',
                 'gate': 'You hit a gate pole!',
                 'miss-gate': 'You missed a gate!',
-                'finish': 'Congratulations! You finished the course! 🏁',
+                'finish': 'Congratulations! You finished the course!',
                 'collision': 'You crashed!',
             };
             failReason.textContent = messages[reason] ?? 'Game over.';
         }
         
-        this.lastRunPath = this.currentPath.slice();
-        this.currentRunPath = [];
+        // `currentRunPath` already saved above; avoid referencing non-existent `currentPath`
 
 
         console.log(`Game Over! Reason: ${reason}, Distance: ${this.distance}m`);

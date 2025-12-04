@@ -412,7 +412,7 @@ skierModel.addComponent(new Parent(skier));
 
 // Dodaj particle system za snežni pršec
 const particleSystem = new ParticleSystem({
-    maxParticles: 2000,       // povečano na 2000 za dolgo sled skozi celotno igro
+    maxParticles: 800,       // reduced pool to avoid excessive draw/update cost
     emissionRate: 30,         // začetna hitrost emisije (dinamično se spreminja)
     particleLifetime: 0.8,
     particleSize: 0.2,

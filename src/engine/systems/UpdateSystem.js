@@ -1,49 +1,46 @@
 export class UpdateSystem {
 
     constructor(application) {
-        this._update = this._update.bind(this);
-        this._render = this._render.bind(this);
+        this._loop = this._loop.bind(this);
 
         this.application = application;
         this.running = false;
     }
 
     start() {
-        if (this.running) {
-            return;
-        }
+        if (this.running) return;
 
         this.application.start?.();
 
         this._time = performance.now() / 1000;
-
-        this._updateFrame = setInterval(this._update, 0);
-        this._renderFrame = requestAnimationFrame(this._render);
+        this.running = true;
+        this._frameId = requestAnimationFrame(this._loop);
     }
 
     stop() {
-        if (!this.running) {
-            return;
-        }
+        if (!this.running) return;
 
         this.application.stop?.();
-
-        this._updateFrame = clearInterval(this._updateFrame);
-        this._renderFrame = cancelAnimationFrame(this._render);
+        this.running = false;
+        cancelAnimationFrame(this._frameId);
+        this._frameId = null;
     }
 
-    _update() {
+    _loop() {
+        if (!this.running) return;
+
         const time = performance.now() / 1000;
-        const dt = time - this._time;
+        let dt = time - this._time;
         this._time = time;
 
+        // Clamp dt to avoid huge jumps after tab switching or debugging pause
+        const MAX_DT = 0.05; // 50 ms
+        if (dt > MAX_DT) dt = MAX_DT;
+
         this.application.update?.(time, dt);
-    }
-
-    _render() {
-        this._renderFrame = requestAnimationFrame(this._render);
-
         this.application.render?.();
+
+        this._frameId = requestAnimationFrame(this._loop);
     }
 
 }
