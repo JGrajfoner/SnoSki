@@ -93,13 +93,13 @@ fn fragment(input: FragmentInput) -> FragmentOutput {
     let dist = length(toLight);
     let attenuation = 1.0 / (0.1 + dist * 0.08);
     
-    // Spotlight cone effect - mehka in široka
+    // Spotlight cone effect - pravi spotlight
     let spotDir = normalize(light.direction);
     let spotCos = dot(-lightDir, spotDir);
     let spotAngleCos = cos(light.spotAngle);
     
-    // Even softer transition for more gradual falloff
-    let spotIntensity = smoothstep(spotAngleCos - 0.3, spotAngleCos + 0.15, spotCos);
+    // Smoothstep za mehak rob spotlight cone
+    let spotIntensity = smoothstep(spotAngleCos - 0.1, spotAngleCos, spotCos);
     
     let diffuse = diff * baseColor.rgb * light.color * attenuation * spotIntensity;
     

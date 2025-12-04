@@ -22,6 +22,7 @@ import { GameState } from './GameState.js';
 import { checkTreeCollisions, checkGateCollisions } from './CollisionDetection.js';
 import { GLTFLoader } from 'engine/loaders/GLTFLoader.js';
 import { quatMultiply, quatFromAxisAngle } from '../engine/core/Quat.js';
+import { vec3, quat as quatMat } from 'glm';
 
 let skierPrimitives = [];
 let ghostSkier = null;
