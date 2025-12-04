@@ -1,6 +1,7 @@
 import {
     Camera,
     Entity,
+    Light,
     Material,
     Model,
     Primitive,
@@ -10,7 +11,7 @@ import {
     Parent,
 } from 'engine/core/core.js';
 
-import { UnlitRenderer } from 'engine/renderers/UnlitRenderer.js';
+import { LitRenderer } from 'engine/renderers/LitRenderer.js';
 import { ResizeSystem } from 'engine/systems/ResizeSystem.js';
 import { UpdateSystem } from 'engine/systems/UpdateSystem.js';
 import { ParticleSystem } from 'engine/systems/ParticleSystem.js';
@@ -476,8 +477,19 @@ function getFullScene() {
 // 4) RENDERER + SISTEMI + GAME STATE
 //
 const canvas = document.querySelector('canvas');
-const renderer = new UnlitRenderer(canvas);
+const renderer = new LitRenderer(canvas);
 await renderer.initialize();
+
+// Dodaj svetlobo (headlamp)
+const light = new Light({
+    position: [0, 1.2, -1.5],
+    color: [1.0, 0.95, 0.85],
+    intensity: 1.65,
+    ambientStrength: 0.2,
+    direction: [0, -0.4, -1],  // Naprej in malo navzdol
+    spotAngle: 0.7,            // Večji kot = širši cone
+});
+renderer.addLight(light);
 
 // Ustvari game state manager
 const gameState = new GameState();
@@ -721,7 +733,24 @@ function update(t, dt) {
 }
 
 function render() {
-    renderer.render(getFullScene(), cameraEntity);
+    const cameraTransform = cameraEntity.getComponentOfType(Transform);
+    const cameraPos = cameraTransform.translation;
+    
+    const skierTransform = skier.getComponentOfType(Transform);
+    
+    // Headlamp svetloba - direktno na poziciji smučarja, vendar dvignjena višje
+    if (skierTransform) {
+        light.position = [
+            skierTransform.translation[0],
+            skierTransform.translation[1] + 10.0,  // Dvignjena višje za mehkejši beam
+            skierTransform.translation[2]
+        ];
+    }
+    
+    // Direction svetlobe sledi pogleduprej (negativni Z)
+    light.direction = [0, -0.4, -1];
+    
+    renderer.render(getFullScene(), cameraEntity, cameraPos);
 }
 
 function resize({ displaySize: { width, height } }) {

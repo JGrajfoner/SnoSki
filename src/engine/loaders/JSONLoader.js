@@ -1,4 +1,5 @@
 import { Mesh, Vertex } from '../core/core.js';
+import { ensureNormals } from '../core/NormalUtils.js';
 
 export class JSONLoader {
 
@@ -18,7 +19,9 @@ export class JSONLoader {
 
         const indices = json.indices;
 
-        return new Mesh({ vertices, indices });
+        const mesh = new Mesh({ vertices, indices });
+        ensureNormals(mesh);
+        return mesh;
     }
 
 }

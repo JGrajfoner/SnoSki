@@ -13,6 +13,8 @@ import {
     Vertex,
 } from '../core/core.js';
 
+import { ensureNormals } from '../core/NormalUtils.js';
+
 // TODO: GLB support
 // TODO: accessors with no buffer views (zero-initialized)
 // TODO: image from buffer view
@@ -366,7 +368,9 @@ export class GLTFLoader {
             indices.push(indicesAccessor.get(i));
         }
 
-        return new Mesh({ vertices, indices });
+        const mesh = new Mesh({ vertices, indices });
+        ensureNormals(mesh);
+        return mesh;
     }
 
     loadMesh(nameOrIndex) {
