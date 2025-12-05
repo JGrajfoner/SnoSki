@@ -192,10 +192,10 @@ function updateGateFlash(gatePair, dt) {
 // 2) ENTITETE – SVET
 //
 
-// Calculate course length based on gates
-const gateCount = 14;
+// Calculate course length based on gates (zmanjšano za performance)
+const gateCount = 10;
 const firstGateZ = -40;
-const gateStepZ = -32;
+const gateStepZ = -40;
 const lastGateZ = firstGateZ + (gateCount - 1) * gateStepZ;
 const finishZ = lastGateZ - 50;
 const courseLength = Math.abs(finishZ) + 20; // extra buffer
@@ -280,13 +280,13 @@ function createObstacle(x, z) {
 }
 
 
-// Naključno razmetana drevesa z večjo variabilnostjo
+// Naključno razmetana drevesa z večjo variabilnostjo (povečan spacing za performance)
 const trees = [];
 {
     let z = -20;
     while (z > finishZ - 30) { // Generate trees until just before finish
-        // Naključna razdalja med drevesi (10-20 enot)
-        const spacing = 0 + Math.random() * 5;
+        // Naključna razdalja med drevesi (8-16 enot) - zmanjšano število
+        const spacing = 8 + Math.random() * 8;
         z -= spacing;
 
         // Naključno levo/desno
@@ -472,9 +472,9 @@ skierModel.addComponent(new Parent(skier));
 
 // Dodaj particle system za snežni pršec
 const particleSystem = new ParticleSystem({
-    maxParticles: 800,       // reduced pool to avoid excessive draw/update cost
-    emissionRate: 30,         // začetna hitrost emisije (dinamično se spreminja)
-    particleLifetime: 0.8,
+    maxParticles: 300,       // zmanjšano za boljše performanse
+    emissionRate: 15,         // začetna hitrost emisije (dinamično se spreminja)
+    particleLifetime: 0.5,
     particleSize: 0.2,
     particleColor: [0.95, 0.95, 1.0, 0.7], // belo-modrinkast sneg
     spawnOffset: [0, -0.5, 0.3], // za smučarjem
@@ -509,7 +509,7 @@ cameraEntity.addComponent(new Camera({
     aspect: 1,   // v resize() nastavimo pravo razmerje
     fovy:   0.9,
     near:   0.3,
-    far:    3000.0,  // povečano za veliki skybox
+    far:    2000.0,  // dovolj za skybox, optimizirano za performance
 }));
 
 // 2.7. Skybox - alpsko ozadje
@@ -679,9 +679,9 @@ function update(t, dt) {
         const isTurning = skierController.keys['KeyA'] || skierController.keys['ArrowLeft'] ||
                          skierController.keys['KeyD'] || skierController.keys['ArrowRight'];
         
-        // More particles when going fast or turning
-        const baseRate = 20 + speedRatio * 40; // 20-60 particles/sec based on speed
-        const turnBonus = isTurning ? 30 : 0;  // Extra 30 particles/sec when turning
+        // More particles when going fast or turning (optimized rates for performance)
+        const baseRate = 8 + speedRatio * 20; // 8-28 particles/sec based on speed
+        const turnBonus = isTurning ? 15 : 0;  // Extra 15 particles/sec when turning
         particleSystem.emissionRate = baseRate + turnBonus;
         
         // Update particle system
