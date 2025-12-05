@@ -642,10 +642,25 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
     }
 });
 
-// Dodaj spacebar za restart
+// Function to start game
+function startGameFromMenu() {
+    if (window.autoStartTimeout) clearTimeout(window.autoStartTimeout);
+    if (window.countdownInterval) clearInterval(window.countdownInterval);
+    gameState.startGame();
+    document.getElementById('restartButton')?.click();
+}
+
+// Listen for auto-start event from HTML
+window.addEventListener('startGame', startGameFromMenu);
+
+// Dodaj Enter key za start
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && !gameState.isPlaying()) {
-        // Samo spacebar za restart pri game over
+    if (e.code === 'Enter' && gameState.showingMenu) {
+        // Start game when Enter is pressed on menu
+        e.preventDefault();
+        startGameFromMenu();
+    } else if (e.code === 'Enter' && !gameState.isPlaying() && !gameState.showingMenu) {
+        // Restart pri game over
         e.preventDefault();
         document.getElementById('restartButton')?.click();
     }
@@ -728,40 +743,43 @@ function update(t, dt) {
         const currentSpeed = skierController.getCurrentSpeed();
         gameState.update(skierTransform.translation[2], currentSpeed);
         
-        // Preveri trčenje z drevesi
-        const hitTree = checkTreeCollisions(skier, trees);
-        if (hitTree) {
-            gameState.gameOver('tree');
-            console.log('💥 Hit a tree!');
-            return;
-        }
-        
-        // Preveri, če smo pravkar prešli katera še neobdelana vratca
-        for (const pair of gatePairs) {
-            if (pair.passed) continue;
-            // Ko smučarjev Z gre za z vratc (z je negativen, skierZ bo manjši ali enak)
-            if (skierTransform.translation[2] <= pair.z) {
-                pair.passed = true; // obdelaj samo enkrat
-                
-                // Preveri ali je smučar prešel skozi vratca (le X-check, ne trčenje!)
-                if (checkGatePassing(skier, pair)) {
-                    // Prešel skozi vratca pravilno
-                    pair.flashTime = pair.flashDuration;
-                    gameState.gatePassed();
-                } else {
-                    // Zgrešil vratca
-                    gameState.gameOver('miss-gate');
-                    return;
+        // Collision detection je onemogočena med prikazovanjem menuja
+        if (!gameState.showingMenu) {
+            // Preveri trčenje z drevesi
+            const hitTree = checkTreeCollisions(skier, trees);
+            if (hitTree) {
+                gameState.gameOver('tree');
+                console.log('💥 Hit a tree!');
+                return;
+            }
+            
+            // Preveri, če smo pravkar prešli katera še neobdelana vratca
+            for (const pair of gatePairs) {
+                if (pair.passed) continue;
+                // Ko smučarjev Z gre za z vratc (z je negativen, skierZ bo manjši ali enak)
+                if (skierTransform.translation[2] <= pair.z) {
+                    // Preveri ali je smučar prešel skozi vratca (le X-check, ne trčenje!)
+                    if (checkGatePassing(skier, pair)) {
+                        // Prešel skozi vratca pravilno
+                        pair.passed = true; // označi šele po uspešnem prehodu
+                        pair.flashTime = pair.flashDuration;
+                        gameState.gatePassed();
+                    } else {
+                        // Zgrešil vratca
+                        pair.passed = true; // označi tudi če je zgrešil, da ne preverja večkrat
+                        gameState.gameOver('miss-gate');
+                        return;
+                    }
                 }
             }
-        }
-        
-        // Preveri trčenje z ovirami (kamni)
-        const hitObstacle = checkObstacleCollisions(skier, obstacles);
-        if (hitObstacle) {
-            gameState.gameOver('obstacle');
-            console.log('💥 Hit an obstacle!');
-            return;
+            
+            // Preveri trčenje z ovirami (kamni)
+            const hitObstacle = checkObstacleCollisions(skier, obstacles);
+            if (hitObstacle) {
+                gameState.gameOver('obstacle');
+                console.log('💥 Hit an obstacle!');
+                return;
+            }
         }
 
          // --- COIN COLLISION ---

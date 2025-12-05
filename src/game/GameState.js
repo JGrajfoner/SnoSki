@@ -1,6 +1,7 @@
 export class GameState {
     constructor() {
         this.state = 'playing'; // 'playing', 'gameover'
+        this.showingMenu = true; // Ali prikazujemo začetni menu
         this.score = 0; // reserved for future
         this.distance = 0;
         this.gatesPassed = 0;
@@ -11,6 +12,14 @@ export class GameState {
         this.lastRunPath = [];
 
         this.createUI();
+    }
+    
+    startGame() {
+        this.showingMenu = false;
+        this.showHUD();
+        // Odstrani menu overlay
+        const menuOverlay = document.getElementById('menuOverlay');
+        if (menuOverlay) menuOverlay.remove();
     }
     
     createUI() {
@@ -34,8 +43,8 @@ export class GameState {
         
         this.gameOverOverlay.innerHTML = `
             <h1 style="font-size: 72px; margin: 0;">GAME OVER</h1>
-            <p style="font-size: 32px; margin: 10px 0;">Distance: <span id="finalDistance">0</span> m</p>
-            <p style="font-size: 32px; margin: 10px 0;">Gates Passed: <span id="finalGates">0</span></p>
+            <p style="font-size: 32px; margin: 10px 0;">Razdalja: <span id="finalDistance">0</span> m</p>
+            <p style="font-size: 32px; margin: 10px 0;">Stevilo vratc: <span id="finalGates">0</span></p>
             <p id="failReason" style="font-size: 20px; margin: 5px 0; opacity: 0.9;"></p>
             <button id="restartButton" style="
                 font-size: 24px;
@@ -46,7 +55,7 @@ export class GameState {
                 color: white;
                 border: none;
                 border-radius: 8px;
-            ">Restart</button>
+            ">Restart (ENTER)</button>
         `;
         
         document.body.appendChild(this.gameOverOverlay);
@@ -62,14 +71,28 @@ export class GameState {
             font-size: 24px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         `;
         this.hud.innerHTML = `
-            <div>Distance: <span id="distanceDisplay">0</span> m</div>
-            <div>Gates: <span id="gatesDisplay">0</span></div>
-            <div>Speed: <span id="speedDisplay">0</span> m/s</div>
-            <div>Coins: <span id="coinsDisplay">0</span> 🪙</div>
+            <div>Razdalja: <span id="distanceDisplay">0</span> m</div>
+            <div>Vratca: <span id="gatesDisplay">0</span></div>
+            <div>Hitrost: <span id="speedDisplay">0</span> m/s</div>
+            <div>Kovanci: <span id="coinsDisplay">0</span> 🪙</div>
         `;
         document.body.appendChild(this.hud);
+    }
+    
+    showHUD() {
+        if (this.hud) {
+            this.hud.style.opacity = '1';
+        }
+    }
+    
+    hideHUD() {
+        if (this.hud) {
+            this.hud.style.opacity = '0';
+        }
     }
     
     update(skierZ, speed = 0) {
@@ -114,7 +137,7 @@ export class GameState {
         // Update title based on finish or crash
         const titleElement = this.gameOverOverlay.querySelector('h1');
         if (titleElement) {
-            titleElement.textContent = reason === 'finish' ? 'FINISH!' : 'GAME OVER';
+            titleElement.textContent = reason === 'finish' ? 'CILJ!' : 'KONEC IGRE';
             titleElement.style.color = reason === 'finish' ? '#00ff00' : 'white';
         }
         
@@ -132,19 +155,19 @@ export class GameState {
         const failReason = document.getElementById('failReason');
         if (failReason) {
             const messages = {
-                'tree': 'You crashed into a tree!',
-                'gate': 'You hit a gate pole!',
-                'miss-gate': 'You missed a gate!',
-                'finish': 'Congratulations! You finished the course!',
-                'collision': 'You crashed!',
+                'tree': 'Zadel si drevo!',
+                'gate': 'Zadel si vratca!',
+                'miss-gate': 'Zgresil si vratca',
+                'finish': 'Čestitamo! Končal si progo!',
+                'collision': 'Zadel si hlod!',
             };
-            failReason.textContent = messages[reason] ?? 'Game over.';
+            failReason.textContent = messages[reason] ?? 'Konec igre.';
         }
         
         // `currentRunPath` already saved above; avoid referencing non-existent `currentPath`
 
 
-        console.log(`Game Over! Reason: ${reason}, Distance: ${this.distance}m`);
+        console.log(`Konec igre! Razlog: ${reason}, Razdalja: ${this.distance}m`);
     }
     
     reset() {
@@ -157,6 +180,7 @@ export class GameState {
         this.coins = 0;
         this.currentRunPath = [];
         this.gameOverOverlay.style.display = 'none';
+        this.showHUD();
 
         const coinsDisplay = document.getElementById('coinsDisplay');
         if (coinsDisplay) coinsDisplay.textContent = 0;
