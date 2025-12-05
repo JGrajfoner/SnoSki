@@ -29,11 +29,11 @@ let ghostIndex = 0;
 
 //
 // 1) NALOŽIMO MESH IN SNEŽNO TEKSTURO
-//
+//d
 const resources = await loadResources({
     cubeMesh: new URL('../models/cube/cube.json', import.meta.url),
     snowTex:  new URL('../models/snow/Snow010A_2K-JPG_Color.jpg', import.meta.url),
-    alpsSkybox: new URL('../models/skybox/snow.jpg', import.meta.url),  // <- DODAJ
+    alpsSkybox: new URL('../models/skybox/ozadje2.png', import.meta.url),  // Višja kvaliteta panorama
 });
 
 const treeLoader = new GLTFLoader();
@@ -451,13 +451,13 @@ cameraEntity.addComponent(new Camera({
     aspect: 1,   // v resize() nastavimo pravo razmerje
     fovy:   0.9,
     near:   0.3,
-    far:    800.0,  // povečano za skybox
+    far:    3000.0,  // povečano za veliki skybox
 }));
 
 // 2.7. Skybox - alpsko ozadje
 // Za zdaj uporabljamo gradient ali pa lahko kasneje dodaš pravo sliko alp
 function createSkybox() {
-    const skyboxSize = 600; // Velika kocka okoli scene
+    const skyboxSize = 2000; // Ogromna kocka - dalje od kamere
     const skybox = new Entity();
     
     skybox.addComponent(new Transform({
@@ -465,8 +465,8 @@ function createSkybox() {
         scale: [skyboxSize, skyboxSize, skyboxSize],
     }));
     
-    // Ustvari material z modro-belo barvo (nebo in gore)
-    // Lahko kasneje zamenjamo s pravo teksturo alp
+    // Ustvari material s teksturo alp
+    // UV scaling za bolj detaljiran in manj raztegnjen videz
     const skyMaterial = new Material({
         baseTexture: new Texture({
             image: resources.alpsSkybox,
@@ -476,6 +476,7 @@ function createSkybox() {
             }),
         }),
         baseFactor: [1, 1, 1, 1],
+        uvScale: [4, 4], // 4x bolj detaljno za oštrino
     });
     
     skybox.addComponent(new Model({
@@ -768,7 +769,7 @@ function update(t, dt) {
     const skyboxTransform = skybox.getComponentOfType(Transform);
     if (cameraTransform && skyboxTransform) {
         skyboxTransform.translation[0] = cameraTransform.translation[0];
-        skyboxTransform.translation[1] = cameraTransform.translation[1] - 50; // Malo nižje da vidiš "tla"
+        skyboxTransform.translation[1] = cameraTransform.translation[1] - 200; // Daleč nižje za bolj definirano ozadje
         skyboxTransform.translation[2] = cameraTransform.translation[2];
     }
 }
