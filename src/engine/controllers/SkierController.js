@@ -31,10 +31,16 @@ export class SkierController {
         this.currentRotationY = 0;    // Current Y rotation
         this.currentTilt = 0;         // Current roll/tilt angle
         
+        // Speed ramp-up system (počasen start)
+        this.rampUpTime = 0;
+        this.rampUpDuration = 8; // 8 sekund za počasen start
+        this.startMaxSpeed = 20;  // Počasna maksimalna hitrost na začetku
+        this.startMinSpeed = 6;   // Počasna minimalna hitrost na začetku
+        
         // Jump state
         this.isJumping = false;
         this.jumpVelocity = 0;
-        this.jumpForce = 14;          // Zmanjšana amplituda skoka
+        this.jumpForce = 10;          // Zmanjšana amplituda za bolj dinamične skoke
         this.gravity = 28;            // Povečana gravitacija
         this.groundY = 0.15;          // Normalna višina nad tlemi
         
@@ -58,6 +64,15 @@ export class SkierController {
             return;
         }
         
+        // === 0. SPEED RAMP-UP SYSTEM ===
+        // Počasen start, potem preide v normalno hitrost
+        this.rampUpTime += dt;
+        const rampProgress = Math.min(this.rampUpTime / this.rampUpDuration, 1.0); // 0 do 1
+        
+        // Interpolacija med počasno in normalno hitrostjo
+        const currentMaxSpeed = this.startMaxSpeed + (this.maxSpeed - this.startMaxSpeed) * rampProgress;
+        const currentMinSpeed = this.startMinSpeed + (this.minSpeed - this.startMinSpeed) * rampProgress;
+        
         // === 1. INPUT HANDLING ===
         let lateralInput = 0;
         
@@ -75,13 +90,13 @@ export class SkierController {
         if (turnIntensity > 0.1) {
             // Zavijanje = upočasnitev
             this.currentSpeed = Math.max(
-                this.minSpeed,
+                currentMinSpeed,
                 this.currentSpeed - this.deceleration * turnIntensity * dt
             );
         } else {
             // Naravnost = pospeševanje
             this.currentSpeed = Math.min(
-                this.maxSpeed,
+                currentMaxSpeed,
                 this.currentSpeed + this.acceleration * dt
             );
         }
@@ -148,12 +163,13 @@ export class SkierController {
     
     // Reset physics state (useful for game restart)
     reset() {
-        this.currentSpeed = this.minSpeed;
+        this.currentSpeed = this.startMinSpeed; // Nazaj na počasen start
         this.targetRotationY = 0;
         this.currentRotationY = 0;
         this.currentTilt = 0;
         this.isJumping = false;
         this.jumpVelocity = 0;
+        this.rampUpTime = 0; // Resetuj ramp-up timer
     }
     
     keydownHandler(e) {

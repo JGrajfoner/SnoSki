@@ -62,15 +62,20 @@ export function checkTreeCollisions(skier, trees) {
 }
 
 /**
- * Preveri ali je smučar trčil v katerakoli vratca (palice)
+ * Preveri ali je smučar prešel skozi vratca (Z-axis check)
+ * Vrne true če si prešel skozi vratca (ne samo x-check)
  */
-export function checkGateCollisions(skier, gates) {
-    for (const gate of gates) {
-        if (checkCollision(skier, gate)) {
-            return gate; // Vrni palico s katero se je zaletel
-        }
-    }
-    return null;
+export function checkGatePassing(skier, gatePair) {
+    const skierTransform = skier.getComponentOfType(Transform);
+    if (!skierTransform) return false;
+    
+    const skierX = skierTransform.translation[0];
+    const gateZ = gatePair.z;
+    const centerX = gatePair.centerX;
+    const halfWidth = gatePair.halfWidth;
+    
+    // Preveri ali je X v vratcih (horizontalno)
+    return (skierX >= centerX - halfWidth) && (skierX <= centerX + halfWidth);
 }
 
 /**

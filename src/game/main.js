@@ -19,7 +19,7 @@ import { loadResources } from 'engine/loaders/resources.js';
 import { SkierController } from 'engine/controllers/SkierController.js';
 
 import { GameState } from './GameState.js';
-import { checkTreeCollisions, checkGateCollisions, checkObstacleCollisions } from './CollisionDetection.js';
+import { checkTreeCollisions, checkGatePassing, checkObstacleCollisions } from './CollisionDetection.js';
 import { GLTFLoader } from 'engine/loaders/GLTFLoader.js';
 import { quatMultiply, quatFromAxisAngle } from '../engine/core/Quat.js';
 
@@ -192,12 +192,12 @@ function updateGateFlash(gatePair, dt) {
 // 2) ENTITETE – SVET
 //
 
-// Calculate course length based on gates (zmanjšano za performance)
-const gateCount = 10;
+// Calculate course length based on gates (podaljšana proga - mega)
+const gateCount = 22;
 const firstGateZ = -40;
-const gateStepZ = -40;
+const gateStepZ = -32;
 const lastGateZ = firstGateZ + (gateCount - 1) * gateStepZ;
-const finishZ = lastGateZ - 50;
+const finishZ = lastGateZ - 70;
 const courseLength = Math.abs(finishZ) + 20; // extra buffer
 
 // 2.1. Smučarska proga: zelo široka in dolga "ploskev"
@@ -736,12 +736,24 @@ function update(t, dt) {
             return;
         }
         
-        // Preveri trčenje z vratci
-        const hitGate = checkGateCollisions(skier, gateEntities);
-        if (hitGate) {
-            gameState.gameOver('gate');
-            console.log('💥 Hit a gate pole!');
-            return;
+        // Preveri, če smo pravkar prešli katera še neobdelana vratca
+        for (const pair of gatePairs) {
+            if (pair.passed) continue;
+            // Ko smučarjev Z gre za z vratc (z je negativen, skierZ bo manjši ali enak)
+            if (skierTransform.translation[2] <= pair.z) {
+                pair.passed = true; // obdelaj samo enkrat
+                
+                // Preveri ali je smučar prešel skozi vratca (le X-check, ne trčenje!)
+                if (checkGatePassing(skier, pair)) {
+                    // Prešel skozi vratca pravilno
+                    pair.flashTime = pair.flashDuration;
+                    gameState.gatePassed();
+                } else {
+                    // Zgrešil vratca
+                    gameState.gameOver('miss-gate');
+                    return;
+                }
+            }
         }
         
         // Preveri trčenje z ovirami (kamni)
@@ -769,30 +781,7 @@ function update(t, dt) {
 
                 console.log("🪙 Coin collected! Total:", gameState.coins);
             }
-        }
-
-        
-        // Preveri, če smo pravkar prešli katera še neobdelana vratca
-        for (const pair of gatePairs) {
-            if (pair.passed) continue;
-            // Ko smučarjev Z gre za z vratc (z je negativen, skierZ bo manjši ali enak)
-            if (skierTransform.translation[2] <= pair.z) {
-                pair.passed = true; // obdelaj samo enkrat
-                const x = skierTransform.translation[0];
-                const withinGate = (x >= pair.centerX - pair.halfWidth) && (x <= pair.centerX + pair.halfWidth);
-                if (withinGate) {
-                    // Sproži flash animacijo
-                    pair.flashTime = pair.flashDuration;
-                    gameState.gatePassed();
-                } else {
-                    // Zgrešil vratca
-                    gameState.gameOver('miss-gate');
-                    console.log('❌ Missed a gate!');
-                    return;
-                }
-            }
-        }
-        
+        }        
         // Preveri, če je smučar prečkal ciljno črto
         if (skierTransform.translation[2] <= finishZ) {
             gameState.gameOver('finish');
