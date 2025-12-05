@@ -3,14 +3,14 @@ import { quat } from 'glm';
 
 export class SkierController {
     constructor(entity, domElement, {
-        maxSpeed = 25,            // maksimalna hitrost
-        minSpeed = 8,             // minimalna hitrost
-        acceleration = 8,         // pospeševanje naprej
-        deceleration = 12,        // zaviranje pri zavijanju
-        lateralSpeed = 12,        // hitrost levo/desno
+        maxSpeed = 40,            // maksimalna hitrost (povečana z 25)
+        minSpeed = 12,             // minimalna hitrost (povečana z 8)
+        acceleration = 15,         // pospeševanje naprej (povečano z 8)
+        deceleration = 14,        // zaviranje pri zavijanju (povečano z 12)
+        lateralSpeed = 18,        // hitrost levo/desno (povečana z 12)
         maxX = 25,                // meja na levi in desni strani proge
-        turnRotationSpeed = 3.5,  // hitrost rotacije pri zavijanju
-        tiltAmount = 0.35,        // nagib smučarja pri zavijanju
+        turnRotationSpeed = 5.5,  // hitrost rotacije pri zavijanju (povečana z 3.5)
+        tiltAmount = 0.45,        // nagib smučarja pri zavijanju (povečan z 0.35)
     } = {}) {
         this.entity = entity;
         this.domElement = domElement;
@@ -34,8 +34,8 @@ export class SkierController {
         // Jump state
         this.isJumping = false;
         this.jumpVelocity = 0;
-         this.jumpForce = 15;          // Povečana začetna hitrost skoka
-        this.gravity = 25;            // Povečana gravitacija za hitrejši skok
+        this.jumpForce = 14;          // Zmanjšana amplituda skoka
+        this.gravity = 28;            // Povečana gravitacija
         this.groundY = 0.15;          // Normalna višina nad tlemi
         
         this.keys = {};

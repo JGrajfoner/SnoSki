@@ -594,14 +594,14 @@ const gameState = new GameState();
 
 // Dodaj kontroler za premikanje smučarja z novimi fizikalnimi parametri
 const skierController = new SkierController(skier, canvas, {
-    maxSpeed: 25,           // maksimalna hitrost
-    minSpeed: 8,            // začetna/minimalna hitrost
-    acceleration: 8,        // pospeševanje
-    deceleration: 12,       // zaviranje pri zavijanju
-    lateralSpeed: 12,       // hitrost levo/desno
+    maxSpeed: 40,           // maksimalna hitrost (povečana)
+    minSpeed: 12,            // začetna/minimalna hitrost (povečana)
+    acceleration: 15,        // pospeševanje (povečano)
+    deceleration: 14,       // zaviranje pri zavijanju (povečano)
+    lateralSpeed: 18,       // hitrost levo/desno (povečana)
     maxX: 25,               // meja za rob proge
-    turnRotationSpeed: 3.5, // hitrost rotacije
-    tiltAmount: 0.35,       // nagib pri zavijanju
+    turnRotationSpeed: 5.5, // hitrost rotacije (povečana)
+    tiltAmount: 0.45,       // nagib pri zavijanju (povečan)
 });
 skier.addComponent(skierController);
 
