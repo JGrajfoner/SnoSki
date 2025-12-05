@@ -308,8 +308,8 @@ const obstacles = [];
 {
     let z = -30;
     while (z > finishZ - 20) {
-        // Večja razdalja med hlodi - manj pogosto
-        const spacing = 40 + Math.random() * 50; // 40-90 enot
+        // Pogostejši hlodi - več izziva!
+        const spacing = 20 + Math.random() * 30; // 20-50 enot (prej 40-90)
         z -= spacing;
         
         // Pozicija ovire - lahko je na sredini proge (kjer moraš narediti manevro)
