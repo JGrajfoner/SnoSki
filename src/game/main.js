@@ -524,17 +524,22 @@ function createSkybox() {
     }));
     
     // Ustvari material s teksturo alp
-    // UV scaling za bolj detaljiran in manj raztegnjen videz
+    // Namesto ogromne slike ponavljamo teksturo z UV skaliranjem + repeat samplerjem
+    // (sliko shrani v 256x256 ali 512x512 WebP/JPEG/AVIF za manjšo velikost)
     const skyMaterial = new Material({
         baseTexture: new Texture({
-            image: resources.alpsSkybox,
+            image: resources.alpsSkybox, // uporabi manjšo verzijo datoteke, če jo dodaš (npr. 512px WebP)
             sampler: new Sampler({
                 magFilter: 'linear',
                 minFilter: 'linear',
+                mipmapFilter: 'linear',
+                addressModeU: 'repeat',
+                addressModeV: 'repeat',
+                addressModeW: 'repeat',
             }),
         }),
         baseFactor: [1, 1, 1, 1],
-        uvScale: [1, 1], // Normalen scale
+        uvScale: [6, 2], // ponovi teksturo (X=6x okoli horizonta, Y=2x vertikalno)
     });
     
     skybox.addComponent(new Model({
