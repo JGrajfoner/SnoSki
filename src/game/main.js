@@ -33,7 +33,7 @@ let ghostIndex = 0;
 const resources = await loadResources({
     cubeMesh: new URL('../models/cube/cube.json', import.meta.url),
     snowTex:  new URL('../models/snow/Snow010A_2K-JPG_Color.jpg', import.meta.url),
-    alpsSkybox: new URL('../models/skybox/ozadje3.png', import.meta.url),  // Višja kvaliteta panorama
+    alpsSkybox: new URL('../models/skybox/ozadje5.png', import.meta.url),  // Višja kvaliteta panorama
 });
 
 const treeLoader = new GLTFLoader();
