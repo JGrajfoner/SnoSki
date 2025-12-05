@@ -7,6 +7,7 @@ export * from './Model.js';
 export * from './Parent.js';
 export * from './Primitive.js';
 export * from './Sampler.js';
+export * from './Skybox.js';
 export * from './Texture.js';
 export * from './Transform.js';
 export * from './Vertex.js';

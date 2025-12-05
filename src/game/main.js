@@ -5,6 +5,7 @@ import {
     Model,
     Primitive,
     Sampler,
+    Skybox,
     Texture,
     Transform,
     Parent,
@@ -32,6 +33,7 @@ let ghostIndex = 0;
 const resources = await loadResources({
     cubeMesh: new URL('../models/cube/cube.json', import.meta.url),
     snowTex:  new URL('../models/snow/Snow010A_2K-JPG_Color.jpg', import.meta.url),
+    alpsSkybox: new URL('../models/skybox/snow.jpg', import.meta.url),  // <- DODAJ
 });
 
 const treeLoader = new GLTFLoader();
@@ -449,13 +451,56 @@ cameraEntity.addComponent(new Camera({
     aspect: 1,   // v resize() nastavimo pravo razmerje
     fovy:   0.9,
     near:   0.3,
-    far:    400.0,
+    far:    800.0,  // povečano za skybox
 }));
+
+// 2.7. Skybox - alpsko ozadje
+// Za zdaj uporabljamo gradient ali pa lahko kasneje dodaš pravo sliko alp
+function createSkybox() {
+    const skyboxSize = 600; // Velika kocka okoli scene
+    const skybox = new Entity();
+    
+    skybox.addComponent(new Transform({
+        translation: [0, 0, 0],
+        scale: [skyboxSize, skyboxSize, skyboxSize],
+    }));
+    
+    // Ustvari material z modro-belo barvo (nebo in gore)
+    // Lahko kasneje zamenjamo s pravo teksturo alp
+    const skyMaterial = new Material({
+        baseTexture: new Texture({
+            image: resources.alpsSkybox,
+            sampler: new Sampler({
+                magFilter: 'linear',
+                minFilter: 'linear',
+            }),
+        }),
+        baseFactor: [1, 1, 1, 1],
+    });
+    
+    skybox.addComponent(new Model({
+        primitives: [
+            new Primitive({
+                mesh: resources.cubeMesh,
+                material: skyMaterial,
+            })
+        ],
+    }));
+    
+    skybox.addComponent(new Skybox({
+        size: skyboxSize,
+    }));
+    
+    return skybox;
+}
+
+const skybox = createSkybox();
 
 //
 // 3) SCENA – seznam entitet
 //
 let scene = [
+    skybox,      // Skybox se renderira najprej (v ozadju)
     slope,
     skier,
     skierModel,
@@ -717,6 +762,14 @@ function update(t, dt) {
         
         // Kamera sledi Z poziciji smučarja z offsetom (ostane za njim)
         cameraTransform.translation[2] = skierTransform.translation[2] + 32;
+    }
+    
+    // Skybox sledi kameri (vedno v centru kamere)
+    const skyboxTransform = skybox.getComponentOfType(Transform);
+    if (cameraTransform && skyboxTransform) {
+        skyboxTransform.translation[0] = cameraTransform.translation[0];
+        skyboxTransform.translation[1] = cameraTransform.translation[1] - 50; // Malo nižje da vidiš "tla"
+        skyboxTransform.translation[2] = cameraTransform.translation[2];
     }
 }
 
