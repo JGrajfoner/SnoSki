@@ -33,7 +33,7 @@ let ghostIndex = 0;
 const resources = await loadResources({
     cubeMesh: new URL('../models/cube/cube.json', import.meta.url),
     snowTex:  new URL('../models/snow/Snow010A_2K-JPG_Color.jpg', import.meta.url),
-    alpsSkybox: new URL('../models/skybox/ozadje2.png', import.meta.url),  // Višja kvaliteta panorama
+    alpsSkybox: new URL('../models/skybox/ozadje3.png', import.meta.url),  // Višja kvaliteta panorama
 });
 
 const treeLoader = new GLTFLoader();
@@ -457,11 +457,11 @@ cameraEntity.addComponent(new Camera({
 // 2.7. Skybox - alpsko ozadje
 // Za zdaj uporabljamo gradient ali pa lahko kasneje dodaš pravo sliko alp
 function createSkybox() {
-    const skyboxSize = 2000; // Ogromna kocka - dalje od kamere
+    const skyboxSize = 2000; // Velik skybox - daleč nazaj
     const skybox = new Entity();
     
     skybox.addComponent(new Transform({
-        translation: [0, 0, 0],
+        translation: [0, 0, 0], // Centiran s kamero
         scale: [skyboxSize, skyboxSize, skyboxSize],
     }));
     
@@ -476,7 +476,7 @@ function createSkybox() {
             }),
         }),
         baseFactor: [1, 1, 1, 1],
-        uvScale: [4, 4], // 4x bolj detaljno za oštrino
+        uvScale: [1, 1], // Normalen scale
     });
     
     skybox.addComponent(new Model({
