@@ -31,6 +31,13 @@ export class SkierController {
         this.currentRotationY = 0;    // Current Y rotation
         this.currentTilt = 0;         // Current roll/tilt angle
         
+        // Jump state
+        this.isJumping = false;
+        this.jumpVelocity = 0;
+         this.jumpForce = 15;          // Povečana začetna hitrost skoka
+        this.gravity = 25;            // Povečana gravitacija za hitrejši skok
+        this.groundY = 0.15;          // Normalna višina nad tlemi
+        
         this.keys = {};
         
         this.initHandlers();
@@ -109,6 +116,29 @@ export class SkierController {
         // === 5. FORWARD MOVEMENT ===
         // Move forward at current speed (negative Z direction)
         transform.translation[2] -= this.currentSpeed * dt;
+        
+        // === 6. JUMP MECHANICS ===
+        // Trigger jump on Space press
+        if (this.keys['Space'] && !this.isJumping && transform.translation[1] <= this.groundY + 0.01) {
+            this.isJumping = true;
+            this.jumpVelocity = this.jumpForce;
+        }
+        
+        // Apply jump physics
+        if (this.isJumping || transform.translation[1] > this.groundY) {
+            // Apply velocity
+            transform.translation[1] += this.jumpVelocity * dt;
+            
+            // Apply gravity
+            this.jumpVelocity -= this.gravity * dt;
+            
+            // Land on ground
+            if (transform.translation[1] <= this.groundY) {
+                transform.translation[1] = this.groundY;
+                this.isJumping = false;
+                this.jumpVelocity = 0;
+            }
+        }
     }
     
     // Get current speed for external use (e.g., UI display)
@@ -122,6 +152,8 @@ export class SkierController {
         this.targetRotationY = 0;
         this.currentRotationY = 0;
         this.currentTilt = 0;
+        this.isJumping = false;
+        this.jumpVelocity = 0;
     }
     
     keydownHandler(e) {

@@ -19,7 +19,7 @@ import { loadResources } from 'engine/loaders/resources.js';
 import { SkierController } from 'engine/controllers/SkierController.js';
 
 import { GameState } from './GameState.js';
-import { checkTreeCollisions, checkGateCollisions } from './CollisionDetection.js';
+import { checkTreeCollisions, checkGateCollisions, checkObstacleCollisions } from './CollisionDetection.js';
 import { GLTFLoader } from 'engine/loaders/GLTFLoader.js';
 import { quatMultiply, quatFromAxisAngle } from '../engine/core/Quat.js';
 
@@ -99,6 +99,22 @@ if (coinLoader.gltf.meshes) {
         }
     }
 }
+
+const trunkLoader = new GLTFLoader();
+await trunkLoader.load(new URL('../models/trunk/dead_tree_trunk_02_1k.gltf', import.meta.url));
+
+let trunkPrimitives = [];
+if (trunkLoader.gltf.meshes) {
+    console.log('trunk meshes:', trunkLoader.gltf.meshes.length);
+    for (let i = 0; i < trunkLoader.gltf.meshes.length; i++) {
+        const model = trunkLoader.loadMesh(i);
+        if (model && model.primitives) {
+            trunkPrimitives.push(...model.primitives);
+        }
+    }
+}
+
+console.log('Loaded trunk primitives:', trunkPrimitives.length);
 
 //coin factory
 
@@ -237,7 +253,31 @@ function createTree (x, z, height = 4) {
     return tree;
 }
 
-
+// Factory za ovire (hlodi na progi)
+function createObstacle(x, z) {
+    const obstacle = new Entity();
+    
+    // Naključna velikost in rotacija hloda
+    const scale = 0.8 + Math.random() * 0.6; // 0.8 - 1.4
+    
+    // Hlod je ležeč na progi - rotiran okoli X in Y osi
+    const yRotation = Math.random() * Math.PI * 2; // random heading
+    
+    obstacle.addComponent(new Transform({
+        translation: [x, -1.4, z], // Na površini proge
+        rotation: [0, Math.sin(yRotation/2), 0, Math.cos(yRotation/2)], // naključna rotacija okoli Y
+        scale: [scale, scale, scale],
+    }));
+    
+    obstacle.addComponent(new Model({
+        primitives: trunkPrimitives,
+    }));
+    
+    // Hitbox za collision detection - hlod je dolg in širok
+    obstacle.hitboxRadius = scale * 1.2;
+    
+    return obstacle;
+}
 
 
 // Naključno razmetana drevesa z večjo variabilnostjo
@@ -262,6 +302,24 @@ const trees = [];
         trees.push(createTree(x, z, height));
     }
 }
+
+// Random ovire na progi (hlodi)
+const obstacles = [];
+{
+    let z = -30;
+    while (z > finishZ - 20) {
+        // Večja razdalja med hlodi - manj pogosto
+        const spacing = 40 + Math.random() * 50; // 40-90 enot
+        z -= spacing;
+        
+        // Pozicija ovire - lahko je na sredini proge (kjer moraš narediti manevro)
+        const x = (Math.random() - 0.5) * 20; // -10 do +10 (centralno območje)
+        
+        obstacles.push(createObstacle(x, z));
+    }
+}
+
+console.log('Spawned obstacles:', obstacles.length);
 
 // 2.3. Vratca – par palic iste barve (rdeča ali modra)
 function createGatePair(zPos, centerX, isRedGate) {
@@ -506,6 +564,7 @@ let scene = [
     skier,
     skierModel,
     ...trees,
+    ...obstacles,
     ...gateEntities,
     //finishLine,
     ...coins,
@@ -677,6 +736,14 @@ function update(t, dt) {
         if (hitGate) {
             gameState.gameOver('gate');
             console.log('💥 Hit a gate pole!');
+            return;
+        }
+        
+        // Preveri trčenje z ovirami (kamni)
+        const hitObstacle = checkObstacleCollisions(skier, obstacles);
+        if (hitObstacle) {
+            gameState.gameOver('obstacle');
+            console.log('💥 Hit an obstacle!');
             return;
         }
 

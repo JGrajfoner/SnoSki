@@ -72,3 +72,36 @@ export function checkGateCollisions(skier, gates) {
     }
     return null;
 }
+
+/**
+ * Preveri ali je smučar trčil v hlod
+ * Če je smučar v zraku (skoči dovolj visoko), lahko preskoči hlod
+ */
+export function checkObstacleCollisions(skier, obstacles) {
+    const skierTransform = skier.getComponentOfType(Transform);
+    if (!skierTransform) return null;
+    
+    const skierY = skierTransform.translation[1];
+    const isJumpingHigh = skierY > 1.0; // Mora biti vsaj 1.0 nad tlemi za preskočit hlod
+    
+    for (const obstacle of obstacles) {
+        const obstacleTransform = obstacle.getComponentOfType(Transform);
+        if (!obstacleTransform) continue;
+        
+        // Preveri horizontalno razdaljo (2D collision v X-Z ravnini)
+        const dx = skierTransform.translation[0] - obstacleTransform.translation[0];
+        const dz = skierTransform.translation[2] - obstacleTransform.translation[2];
+        const distance = Math.sqrt(dx * dx + dz * dz);
+        
+        const hitboxRadius = obstacle.hitboxRadius || 1.2;
+        
+        if (distance < hitboxRadius + 0.5) { // 0.5 = približen polmer smučarja
+            // Če skače dovolj visoko, lahko preskoči hlod
+            if (isJumpingHigh) {
+                continue; // Preskočil hlod!
+            }
+            return obstacle; // Trčil v hlod - game over
+        }
+    }
+    return null;
+}
