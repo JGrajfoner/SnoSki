@@ -44,7 +44,7 @@ export class GameState {
         this.gameOverOverlay.innerHTML = `
             <h1 style="font-size: 72px; margin: 0;">GAME OVER</h1>
             <p style="font-size: 32px; margin: 10px 0;">Razdalja: <span id="finalDistance">0</span> m</p>
-            <p style="font-size: 32px; margin: 10px 0;">Stevilo vratc: <span id="finalGates">0</span></p>
+            <p style="font-size: 32px; margin: 10px 0;">Število vratc: <span id="finalGates">0</span></p>
             <p id="failReason" style="font-size: 20px; margin: 5px 0; opacity: 0.9;"></p>
             <button id="restartButton" style="
                 font-size: 24px;
@@ -55,7 +55,7 @@ export class GameState {
                 color: white;
                 border: none;
                 border-radius: 8px;
-            ">Restart (ENTER)</button>
+            ">Še enkrat!</button>
         `;
         
         document.body.appendChild(this.gameOverOverlay);
@@ -157,9 +157,9 @@ export class GameState {
             const messages = {
                 'tree': 'Zadel si drevo!',
                 'gate': 'Zadel si vratca!',
-                'miss-gate': 'Zgresil si vratca',
+                'miss-gate': 'Zgrešil si vratca',
                 'finish': 'Čestitamo! Končal si progo!',
-                'collision': 'Zadel si hlod!',
+                'obstacle': 'Zadel si hlod!',
             };
             failReason.textContent = messages[reason] ?? 'Konec igre.';
         }
