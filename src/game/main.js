@@ -616,7 +616,7 @@ skier.addComponent(skierController);
 
 // Dodaj restart funkcionalnost
 document.getElementById('restartButton')?.addEventListener('click', () => {
-    
+
      // --- REMOVE OLD GHOST ---
     if (ghostSkier) {
         const idx = scene.indexOf(ghostSkier);
@@ -763,7 +763,7 @@ function update(t, dt) {
             const hitTree = checkTreeCollisions(skier, trees);
             if (hitTree) {
                 gameState.gameOver('tree');
-                console.log('💥 Hit a tree!');
+                console.log('Hit a tree!');
                 return;
             }
             
@@ -791,7 +791,7 @@ function update(t, dt) {
             const hitObstacle = checkObstacleCollisions(skier, obstacles);
             if (hitObstacle) {
                 gameState.gameOver('obstacle');
-                console.log('💥 Hit an obstacle!');
+                console.log('Hit an obstacle!');
                 return;
             }
         }
@@ -811,13 +811,13 @@ function update(t, dt) {
                 coinsToRemove.push(coin);   // mark for removal
                 gameState.coins++;
 
-                console.log("🪙 Coin collected! Total:", gameState.coins);
+                console.log("Coin collected! Total:", gameState.coins);
             }
         }        
         // Preveri, če je smučar prečkal ciljno črto
         if (skierTransform.translation[2] <= finishZ) {
             gameState.gameOver('finish');
-            console.log('🏁 Finished the course!');
+            console.log('Finished the course!');
             return;
         }
     }
