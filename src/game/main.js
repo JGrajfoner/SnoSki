@@ -386,16 +386,17 @@ const gateEntities = gatePairs.flatMap(g => [g.leftGate, g.rightGate]);
 
 
 const coins = [];
-{
+
+function spawnCoins() {
+    coins.length = 0;
+
     let z = -20;
     while (z > finishZ + 20) {
         z -= 20 + Math.random() * 20;
         const x = (Math.random() - 0.5) * 12;
-        coins.push(createCoin(x,z))
+        coins.push(createCoin(x, z));
     }
 }
-console.log('Spawned coins: ', coins.length);
-
 
 // 2.4. Ciljna črta (finish line)
 const finishLine = new Entity();
@@ -571,11 +572,19 @@ let scene = [
     ...trees,
     ...obstacles,
     ...gateEntities,
-    //finishLine,
-    ...coins,
     finishGate,
     cameraEntity,
 ];
+
+function removeCoinsFromScene() {
+    for (const coin of coins) {
+        const idx = scene.indexOf(coin);
+        if (idx !== -1) scene.splice(idx, 1);
+    }
+}
+spawnCoins();
+//console.log('Spawned coins: ', coins.length);
+scene.push(...coins);
 
 // Function to get full scene including particle entities
 function getFullScene() {
@@ -596,7 +605,7 @@ const gameState = new GameState();
 const skierController = new SkierController(skier, canvas, {
     maxSpeed: 40,           // maksimalna hitrost (povečana)
     minSpeed: 12,            // začetna/minimalna hitrost (povečana)
-    acceleration: 15,        // pospeševanje (povečano)
+    acceleration: 8,        // pospeševanje (povečano)
     deceleration: 14,       // zaviranje pri zavijanju (povečano)
     lateralSpeed: 18,       // hitrost levo/desno (povečana)
     maxX: 25,               // meja za rob proge
@@ -607,6 +616,7 @@ skier.addComponent(skierController);
 
 // Dodaj restart funkcionalnost
 document.getElementById('restartButton')?.addEventListener('click', () => {
+    
      // --- REMOVE OLD GHOST ---
     if (ghostSkier) {
         const idx = scene.indexOf(ghostSkier);
@@ -631,6 +641,10 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
         scene.push(ghostSkier);
         ghostIndex = 0;
     }
+    removeCoinsFromScene();
+
+    spawnCoins();
+    scene.push(...coins);
     
     // Clear particles
     particleSystem.clear();
