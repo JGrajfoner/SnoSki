@@ -19,7 +19,7 @@ import { loadResources } from 'engine/loaders/resources.js';
 import { SkierController } from 'engine/controllers/SkierController.js';
 
 import { GameState } from './GameState.js';
-import { checkTreeCollisions, checkGatePassing, checkObstacleCollisions } from './CollisionDetection.js';
+import { checkTreeCollisions, checkGatePassing, checkObstacleCollisions, checkGateCollision } from './CollisionDetection.js';
 import { GLTFLoader } from 'engine/loaders/GLTFLoader.js';
 import { quatMultiply, quatFromAxisAngle } from '../engine/core/Quat.js';
 
@@ -771,16 +771,21 @@ function update(t, dt) {
             for (const pair of gatePairs) {
                 if (pair.passed) continue;
                 // Ko smučarjev Z gre za z vratc (z je negativen, skierZ bo manjši ali enak)
+                // Najprej preveri TRK s palico
+                if (checkGateCollision(skier, pair)) {
+                    pair.passed = true;
+                    gameState.gameOver('gate');   // Zadel si vratca
+                    return;
+                }
+
+                // Nato preveri PASSING (ko greš mimo Z)
                 if (skierTransform.translation[2] <= pair.z) {
-                    // Preveri ali je smučar prešel skozi vratca (le X-check, ne trčenje!)
                     if (checkGatePassing(skier, pair)) {
-                        // Prešel skozi vratca pravilno
-                        pair.passed = true; // označi šele po uspešnem prehodu
+                        pair.passed = true;
                         pair.flashTime = pair.flashDuration;
                         gameState.gatePassed();
                     } else {
-                        // Zgrešil vratca
-                        pair.passed = true; // označi tudi če je zgrešil, da ne preverja večkrat
+                        pair.passed = true;
                         gameState.gameOver('miss-gate');
                         return;
                     }

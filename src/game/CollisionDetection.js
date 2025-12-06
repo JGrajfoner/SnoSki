@@ -110,3 +110,11 @@ export function checkObstacleCollisions(skier, obstacles) {
     }
     return null;
 }
+
+export function checkGateCollision(skier, gatePair) {
+    return (
+        checkCollision(skier, gatePair.leftGate) ||
+        checkCollision(skier, gatePair.rightGate)
+    );
+}
+
