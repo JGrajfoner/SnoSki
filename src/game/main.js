@@ -617,6 +617,9 @@ skier.addComponent(skierController);
 // Dodaj restart funkcionalnost
 document.getElementById('restartButton')?.addEventListener('click', () => {
 
+
+     window.playMusicFromStart?.();
+    
      // --- REMOVE OLD GHOST ---
     if (ghostSkier) {
         const idx = scene.indexOf(ghostSkier);
@@ -658,6 +661,7 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
 
 // Function to start game
 function startGameFromMenu() {
+    window.playMusicFromStart?.();  
     if (window.autoStartTimeout) clearTimeout(window.autoStartTimeout);
     if (window.countdownInterval) clearInterval(window.countdownInterval);
     gameState.startGame();

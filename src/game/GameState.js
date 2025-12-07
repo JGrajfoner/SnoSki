@@ -125,6 +125,8 @@ export class GameState {
     
     gameOver(reason = 'collision') {
         if (this.state === 'gameover') return;
+
+        window.stopMusic?.();
         
         this.state = 'gameover';
 
