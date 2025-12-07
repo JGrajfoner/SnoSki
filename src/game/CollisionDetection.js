@@ -27,14 +27,13 @@ export function checkCollision(entity1, entity2) {
 }
 
 /**
- * Izračuna AABB (Axis-Aligned Bounding Box) za transform
+ * Izračun AABB za transform
  */
 function getBoundingBox(transform) {
     const [x, y, z] = transform.translation;
     const [scaleX, scaleY, scaleZ] = transform.scale || [1, 1, 1];
     
     // Osnovna kocka ima velikost 2x2x2 (od -1 do +1)
-    // Tako da moramo pomnožiti s scale in deliti z 2
     const halfX = scaleX / 2;
     const halfY = scaleY / 2;
     const halfZ = scaleZ / 2;

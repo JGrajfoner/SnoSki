@@ -2,7 +2,7 @@ export class GameState {
     constructor() {
         this.state = 'playing'; // 'playing', 'gameover'
         this.showingMenu = true; // show menu at start?
-        this.score = 0; // reserved for future
+        this.score = 0; 
         this.distance = 0;
         this.gatesPassed = 0;
         this.speed = 0; // current speed
@@ -11,8 +11,8 @@ export class GameState {
         this.currentRunPath = [];
         this.lastRunPath = [];
         
-        this.bestDistance = 0; // Track best distance for ghost replay
-        this.bestRunPath = []; // Store path of best run
+        this.bestDistance = 0; // track best distance for ghost replay
+        this.bestRunPath = []; // store path of best run
 
         this.createUI();
     }
@@ -20,13 +20,13 @@ export class GameState {
     startGame() {
         this.showingMenu = false;
         this.showHUD();
-        // Odstrani menu overlay
+        // odstrani menu overlay
         const menuOverlay = document.getElementById('menuOverlay');
         if (menuOverlay) menuOverlay.remove();
     }
     
     createUI() {
-        // Ustvari overlay za game over
+        // ustvari overlay za game over
         this.gameOverOverlay = document.createElement('div');
         this.gameOverOverlay.style.cssText = `
             position: fixed;
@@ -63,7 +63,7 @@ export class GameState {
         
         document.body.appendChild(this.gameOverOverlay);
         
-        // Ustvari HUD za score in distance med igro
+        // ustvari HUD za score in distance med igro
         this.hud = document.createElement('div');
         this.hud.style.cssText = `
             position: fixed;
@@ -100,7 +100,7 @@ export class GameState {
     
     update(skierZ, speed = 0) {
         if (this.state === 'playing') {
-            // Posodobi razdaljo (z je negativen, zato -z)
+            // posodobi razdaljo (z je negativen, zato -z)
             this.distance = Math.max(0, Math.floor(-skierZ));
             this.speed = speed;
             
@@ -133,7 +133,7 @@ export class GameState {
         
         this.state = 'gameover';
 
-        // Save current run to lastRunPath for immediate replay
+        // save current run to lastRunPath for immediate replay
         this.lastRunPath = this.currentRunPath.slice();
         
         // Check if current run is better than best run (by distance)
@@ -148,14 +148,14 @@ export class GameState {
         // Prikaži game over overlay
         this.gameOverOverlay.style.display = 'flex';
         
-        // Update title based on finish or crash
+        // gamer over napis glede na razlog za konec igre
         const titleElement = this.gameOverOverlay.querySelector('h1');
         if (titleElement) {
             titleElement.textContent = reason === 'finish' ? 'CILJ!' : 'KONEC IGRE!';
             titleElement.style.color = reason === 'finish' ? '#00ff00' : 'white';
         }
         
-        // Posodobi končno razdaljo
+        // posodobi končno razdaljo
         const finalDistance = document.getElementById('finalDistance');
         if (finalDistance) {
             finalDistance.textContent = this.distance;
@@ -177,9 +177,6 @@ export class GameState {
             };
             failReason.textContent = messages[reason] ?? 'Konec igre.';
         }
-        
-        // `currentRunPath` already saved above; avoid referencing non-existent `currentPath`
-
 
         console.log(`Konec igre! Razlog: ${reason}, Razdalja: ${this.distance}m`);
     }
@@ -198,8 +195,6 @@ export class GameState {
 
         const coinsDisplay = document.getElementById('coinsDisplay');
         if (coinsDisplay) coinsDisplay.textContent = 0;
-
-      
     }
     
     isPlaying() {
