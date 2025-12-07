@@ -27,9 +27,8 @@ let skierPrimitives = [];
 let ghostSkier = null;
 let ghostIndex = 0;
 
-//
-// 1) NALOŽIMO MESH IN SNEŽNO TEKSTURO
-//
+// 1. NALOŽIMO MESH IN SNEŽNO TEKSTURO
+
 const resources = await loadResources({
     cubeMesh: new URL('../models/cube/cube.json', import.meta.url),
     snowTex:  new URL('../models/snow/Snow010A_2K-JPG_Color.jpg', import.meta.url),
@@ -109,7 +108,7 @@ if (trunkLoader.gltf.meshes) {
 
 console.log('Loaded trunk primitives:', trunkPrimitives.length);
 
-//coin factory
+// coin factory
 
 function createCoin(x, z) {
     const coin = new Entity();
@@ -132,7 +131,7 @@ function createCoin(x, z) {
 const coinsToRemove = [];
 
 
-// enotni sampler + tekstura (sneg) za vse objekte
+// enotni sampler + tekstura (sneg)
 const snowTexture = new Texture({
     image: resources.snowTex,
     sampler: new Sampler({
@@ -181,11 +180,9 @@ function updateGateFlash(gatePair, dt) {
     }
 }
 
-//
-// 2) ENTITETE – SVET
-//
+// 2. ENTITETE – SVET
 
-// Calculate course length based on gates (podaljšana proga - mega)
+// Calculate course length based on gates
 const gateCount = 22;
 const firstGateZ = -40;
 const gateStepZ = -32;
@@ -231,14 +228,14 @@ function createTree (x, z, height = 4) {
     return tree;
 }
 
-// Factory za ovire (hlodi na progi)
+// factory za ovire (hlodi na progi)
 function createObstacle(x, z) {
     const obstacle = new Entity();
     
     // Naključna velikost in rotacija hloda
     const scale = 0.8 + Math.random() * 0.6; // 0.8 - 1.4
     
-    // Hlod je ležeč na progi - rotiran okoli X in Y osi
+    // Hlod rotiran okoli X in Y osi
     const yRotation = Math.random() * Math.PI * 2; // random heading
     
     obstacle.addComponent(new Transform({
@@ -251,26 +248,26 @@ function createObstacle(x, z) {
         primitives: trunkPrimitives,
     }));
     
-    // Hitbox za collision detection - hlod je dolg in širok
+    // Hitbox za collision detection
     obstacle.hitboxRadius = scale * 1.2;
     
     return obstacle;
 }
 
 
-// Naključno razmetana drevesa z večjo variabilnostjo (povečan spacing za performance)
+// Naključno nametana drevesa z večjo nestalnostjo (povečan spacing za performance)
 const trees = [];
 {
     let z = -20;
-    while (z > finishZ - 30) { // Generate trees until just before finish
-        // Naključna razdalja med drevesi (8-16 enot) - zmanjšano število
+    while (z > finishZ - 30) { // drevesa generirana SKORAJ do cilja
+        // Naključna razdalja med drevesi (8-16 enot)
         const spacing = 8 + Math.random() * 8;
         z -= spacing;
 
         // Naključno levo/desno
         const side = Math.random() < 0.5 ? -1 : 1;
 
-        // Večja variabilnost v X poziciji: 15-28 enot od centra
+        // Večja nestalnost v X poziciji: 15-28 enot od centra
         const xBase = 15 + Math.random() * 13;
         const x = side * xBase;
 
@@ -299,9 +296,9 @@ const obstacles = [];
 
 console.log('Spawned obstacles:', obstacles.length);
 
-// 2.3. Vratca – par palic iste barve (rdeča ali modra)
+// 2.3. Vratca – par količkov iste barve (rdeča ali modra)
 function createGatePair(zPos, centerX, isRedGate) {
-    const gateHalfWidth  = 1.8;   // polovica razmika med količkoma
+    const gateHalfWidth  = 1.8; // polovica razmika med količkoma
     const poleHeight     = 2.2;
     const poleThickness  = 0.12;
 
@@ -343,8 +340,8 @@ function createGatePair(zPos, centerX, isRedGate) {
 }
 
 // Naredimo več vratc po progi: rdeča, modra, rdeča, modra ...
-// Vsaka vrata ima naključno horizontalno pozicijo za večjo zanimivost
-// Vratca ostanejo znotraj mejnih dreves (≈ ±15 enot od centra)
+// Vsaka vratca imajo naključno horizontalno pozicijo za večjo zanimivost
+// Vratca ostanejo znotraj mejnih dreves (približno +15 ali -15 enot od centra)
 const gatePairs = [];
 {
     const maxHorizontalRange = 14; // ostanemo znotraj ±15 (približna pozicija najbližjih dreves)
@@ -358,7 +355,6 @@ const gatePairs = [];
     }
 }
 
-// Plosko polje vseh entitet vratc (levi + desni) za render in collision
 const gateEntities = gatePairs.flatMap(g => [g.leftGate, g.rightGate]);
 
 const coins = [];
@@ -374,18 +370,7 @@ function spawnCoins() {
     }
 }
 
-// 2.4. Ciljna črta
-const finishLine = new Entity();
-finishLine.addComponent(new Transform({
-    translation: [0, -1.45, finishZ],
-    scale: [30, 0.2, 0.8], // široka črta
-}));
-finishLine.addComponent(new Model({
-    primitives: [createColoredPrimitive(1.0, 0.8, 0.0, 1)], // zlata/rumena barva
-}));
-
-
-// 2.4b Finish gate (nad črto)
+// 2.4 Ciljna vrata
 const finishGate = new Entity();
 finishGate.addComponent(new Transform({
     translation: [0, 0.2, finishZ], 
@@ -400,8 +385,8 @@ finishGate.addComponent(new Model({
 const skier = new Entity();
 skier.addComponent(new Transform({
     translation: [0, 0.15, 8],
-    rotation: [0, 0, 0, 1],     // nevtralna rotacija
-    scale: [1, 1, 1],           // scale raje nastavljamo na child
+    rotation: [0, 0, 0, 1],   // nevtralna rotacija
+    scale: [1, 1, 1],         // scale raje nastavljamo na child
 }));
 
 const skierModel = new Entity();
@@ -409,7 +394,7 @@ skierModel.name = "skierModel";
 skierModel.addComponent(new Transform({
     translation: [0, 0, 0],
     rotation: [0, 0.707, 0.707, 0],   // -90° okoli X da stoji pokonci
-    scale: [0.5, 0.5, 0.5],              // smiselna velikost smučarja
+    scale: [0.5, 0.5, 0.5],           // smiselna velikost smučarja
 }));
 
 skierModel.addComponent(new Model({
@@ -422,7 +407,7 @@ function createGhostSkier() {
     ghost.addComponent(new Transform({
         translation: [0, 0, 0],
         rotation: [0, 0.707, 0.707, 0],   // -90° okoli X da stoji pokonci
-        scale: [0.5, 0.5, 0.5],              // pravilna velikost smučarja
+        scale: [0.5, 0.5, 0.5],           // smiselna velikost smučarja
     }));
 
     ghost.addComponent(new Model({
@@ -443,25 +428,25 @@ function createGhostSkier() {
 // Poveži model pod glavno entiteto
 skierModel.addComponent(new Parent(skier));
 
-// Dodaj particle system za snežni pršec
+// Dodaj particle system za snežne delce za smučarjem
 const particleSystem = new ParticleSystem({
     maxParticles: 300,       // zmanjšano za boljj tekoče delovanje igre
-    emissionRate: 15,         // začetna hitrost emisije (dinamično spreminjanje)
+    emissionRate: 15,        // začetna hitrost emisije (dinamično spreminjanje)
     particleLifetime: 0.5,
     particleSize: 0.2,
-    particleColor: [0.95, 0.95, 1.0, 0.7], // belo-modrinkast sneg
+    particleColor: [0.95, 0.95, 1.0, 0.7], // belo-modrikast sneg
     spawnOffset: [0, -0.5, 0.3], // za smučarjem
     velocityRange: {
         x: [-3, 3],
         y: [0.2, 1.5],
-        z: [1, 4]  // proti nazaj
+        z: [1, 4]  // delci grejo nazaj
     },
 });
 particleSystem.setMesh(resources.cubeMesh);
 particleSystem.setTexture(snowTexture);
 skier.addComponent(particleSystem);
 
-// 2.6. Kamera – pogled od zgoraj, malo poševno
+// 2.6. Kamera –  tretjeosebna
 const cameraEntity = new Entity();
 
 const cameraAngle = -0.4; // radiani; negativen = gleda navzdol
@@ -509,7 +494,7 @@ function createSkybox() {
             }),
         }),
         baseFactor: [1, 1, 1, 1],
-        uvScale: [6, 2], // ponovljanje teksture (X=6x okoli horizonta, Y=2x vertikalno)
+        uvScale: [6, 2], // ponavljanje teksture (X=6x okoli horizonta, Y=2x vertikalno)
     });
     
     skybox.addComponent(new Model({
@@ -530,9 +515,8 @@ function createSkybox() {
 
 const skybox = createSkybox();
 
-//
-// 3) SCENA – seznam entitet
-//
+// 3. SCENA – seznam entitet
+
 let scene = [
     skybox,      // Skybox se renderira najprej (v ozadju)
     slope,
@@ -559,9 +543,9 @@ function getFullScene() {
     return [...scene, ...particleSystem.getParticleEntities()];
 }
 
-//
-// 4) RENDERER + SISTEMI + GAME STATE
-//
+
+// 4. RENDERER + SISTEMI + GAME STATE
+
 const canvas = document.querySelector('canvas');
 const renderer = new UnlitRenderer(canvas);
 await renderer.initialize();
@@ -569,10 +553,10 @@ await renderer.initialize();
 // game state manager
 const gameState = new GameState();
 
-// kontroler za premikanje smučarja z novimi fizikalnimi parametri
+// kontroler za premikanje smučarja
 const skierController = new SkierController(skier, canvas, {
     maxSpeed: 40,           // maksimalna hitrost 
-    minSpeed: 12,            // začetna/minimalna hitrost 
+    minSpeed: 12,           // začetna/minimalna hitrost 
     acceleration: 8,        // pospeševanje 
     deceleration: 14,       // zaviranje pri zavijanju 
     lateralSpeed: 18,       // hitrost levo/desno 
@@ -588,7 +572,7 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
 
      window.playMusicFromStart?.();
     
-     // --- REMOVE OLD GHOST ---
+     // remove old ghost
     if (ghostSkier) {
         const idx = scene.indexOf(ghostSkier);
         if (idx !== -1) scene.splice(idx, 1);
@@ -606,7 +590,7 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
     // Reset skier physics
     skierController.reset();
 
-    //aktiviraj duha, če imamo najboljšo rundo igre
+    // activate ghost if there's the best round
     if (gameState.bestRunPath && gameState.bestRunPath.length > 0) {
         ghostSkier = createGhostSkier();
         scene.push(ghostSkier);
@@ -639,25 +623,25 @@ function startGameFromMenu() {
 // Listen for auto-start event from HTML
 window.addEventListener('startGame', startGameFromMenu);
 
-// Enter in Space key za start
+// Enter and Space keys for start
 document.addEventListener('keydown', (e) => {
     if ((e.code === 'Enter' || e.code === 'Space') && gameState.showingMenu) {
         // Start game when Enter or Space is pressed on menu
         e.preventDefault();
         startGameFromMenu();
     } else if ((e.code === 'Enter' || e.code === 'Space') && !gameState.isPlaying() && !gameState.showingMenu) {
-        // Restart pri game over
+        // Restart on game over
         e.preventDefault();
         document.getElementById('restartButton')?.click();
     }
 });
 
 function update(t, dt) {
-    // Preveri če igra še teče
+    // Check if the game is still running
     if (!gameState.isPlaying()) {
         // Disable particles when game over
         particleSystem.setEnabled(false);
-        return; // Če je game over, ne posodabljaj več
+        return; // If game over, do not update further
     }
     
     const skierTransform = skier.getComponentOfType(Transform);
@@ -724,13 +708,13 @@ function update(t, dt) {
     }
 
     if (skierTransform) {
-        // Posodobi game state (razdalja in hitrost)
+        // update game state (distance and speed)
         const currentSpeed = skierController.getCurrentSpeed();
         gameState.update(skierTransform.translation[2], currentSpeed);
         
-        // Collision detection je onemogočena med prikazovanjem menuja
+        // Collision detection is disabled while the menu is showing
         if (!gameState.showingMenu) {
-            // Preveri trčenje z drevesi
+            // Check collision with trees
             const hitTree = checkTreeCollisions(skier, trees);
             if (hitTree) {
                 window.playSound?.('end');
@@ -740,19 +724,19 @@ function update(t, dt) {
                 return;
             }
             
-            // Preveri, če smo pravkar prešli katera še neobdelana vratca
+            // Check if we just passed any unprocessed gates
             for (const pair of gatePairs) {
                 if (pair.passed) continue;
-                // preveri TRK s palico
+                // check collision with gate pole
                 if (checkGateCollision(skier, pair)) {
                     window.playSound?.('end');
                     window.stopMusic?.();
                     pair.passed = true;
-                    gameState.gameOver('gate');   // Zadel si vratca
+                    gameState.gameOver('gate'); 
                     return;
                 }
 
-                // preverimo PASSING (ko greš mimo Z)
+                // check PASSING (when you go past Z)
                 if (skierTransform.translation[2] <= pair.z) {
                     if (checkGatePassing(skier, pair)) {
                         pair.passed = true;
@@ -769,7 +753,7 @@ function update(t, dt) {
                 }
             }
             
-            // preveri trčenje z ovirami (kamni)
+            // Check collision with obstacles (rocks)
             const hitObstacle = checkObstacleCollisions(skier, obstacles);
             if (hitObstacle) {
                 window.playSound?.('end');
@@ -780,7 +764,7 @@ function update(t, dt) {
             }
         }
 
-        // --- COIN COLLISION ---
+        // COIN COLLISION
         for (const coin of coins) {
             if (coin.collected) continue;
 
@@ -798,7 +782,7 @@ function update(t, dt) {
                 console.log("Coin collected! Total:", gameState.coins);
             }
         }        
-            // preveri, če je smučar prečkal ciljno črto
+            // check if the skier has crossed the finish line
         if (skierTransform.translation[2] <= finishZ) {
             window.playSound?.('victory');
             window.stopMusic?.();
@@ -832,18 +816,18 @@ function update(t, dt) {
         }
     }
 
-    // Kamera sledi smučarju
+    // Camera follows the skier
     const cameraTransform = cameraEntity.getComponentOfType(Transform);
     
     if (skierTransform && cameraTransform) {
-        // Kamera sledi X poziciji smučarja (levo/desno)
+        // Camera follows the skier's X position (left/right)
         cameraTransform.translation[0] = skierTransform.translation[0];
         
-        // Kamera sledi Z poziciji smučarja z offsetom (ostane za njim)
+        // Camera follows the skier's Z position with an offset (stays behind)
         cameraTransform.translation[2] = skierTransform.translation[2] + 32;
     }
     
-    // Skybox sledi kameri (vedno v centru kamere)
+    // Skybox follows the camera (always centered on the camera)
     const skyboxTransform = skybox.getComponentOfType(Transform);
     if (cameraTransform && skyboxTransform) {
         skyboxTransform.translation[0] = cameraTransform.translation[0];

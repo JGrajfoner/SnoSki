@@ -4,8 +4,8 @@ import { quat } from 'glm';
 export class SkierController {
     constructor(entity, domElement, {
         maxSpeed = 40,            // maksimalna hitrost (povečana iz 25)
-        minSpeed = 12,             // minimalna hitrost (povečana iz 8)
-        acceleration = 15,         // pospeševanje naprej (povečano iz 8)
+        minSpeed = 12,            // minimalna hitrost (povečana iz 8)
+        acceleration = 15,        // pospeševanje naprej (povečano iz 8)
         deceleration = 14,        // zaviranje pri zavijanju (povečano iz 12)
         lateralSpeed = 18,        // hitrost levo/desno (povečana iz 12)
         maxX = 25,                // meja na levi in desni strani proge
@@ -33,20 +33,20 @@ export class SkierController {
         
         // Speed ramp-up system (počasen start)
         this.rampUpTime = 0;
-        this.rampUpDuration = 8; // 8 sekund za počasen start
-        this.startMaxSpeed = 20;  // Počasna maksimalna hitrost na začetku
-        this.startMinSpeed = 6;   // Počasna minimalna hitrost na začetku
+        this.rampUpDuration = 8;      // čas za dosego maksimalne hitrosti
+        this.startMaxSpeed = 20;      // Počasna maksimalna hitrost na začetku
+        this.startMinSpeed = 6;       // Počasna minimalna hitrost na začetku
         
         // Jump state
         this.isJumping = false;
         this.jumpVelocity = 0;
-        this.jumpForce = 10;          // Zmanjšana amplituda za bolj dinamične skoke
-        this.gravity = 28;            // Povečana gravitacija
-        this.groundY = 0.15;          // Normalna višina nad tlemi
+        this.jumpForce = 10;
+        this.gravity = 28;
+        this.groundY = 0.15;
         
         this.keys = {};
         
-        // Sledenje prejšnjega lateralnega inputa za detekcijo spremembe
+        // Sledenje prejšnjega inputa za detekcijo spremembe
         this.prevLateralInput = 0;
         this.isSkiingSoundPlaying = false;
         
@@ -68,7 +68,7 @@ export class SkierController {
             return;
         }
         
-        // === 0. SPEED RAMP-UP SYSTEM ===
+        // 0. SPEED RAMP-UP SYSTEM
         // Počasen start, potem preide v normalno hitrost
         this.rampUpTime += dt;
         const rampProgress = Math.min(this.rampUpTime / this.rampUpDuration, 1.0); // 0 do 1
@@ -77,7 +77,7 @@ export class SkierController {
         const currentMaxSpeed = this.startMaxSpeed + (this.maxSpeed - this.startMaxSpeed) * rampProgress;
         const currentMinSpeed = this.startMinSpeed + (this.minSpeed - this.startMinSpeed) * rampProgress;
         
-        // === 1. INPUT HANDLING ===
+        // 1. INPUT HANDLING
         let lateralInput = 0;
         
         if (this.keys['KeyA'] || this.keys['ArrowLeft']) {
@@ -87,13 +87,13 @@ export class SkierController {
             lateralInput += 1;
         }
         
-        // === SKIING SOUND ===
-        // Začni zvok, ko smučar prvič pritisne tipko za zavijanje
+        // SKIING SOUND
+        // Predvajaj zvok, ko igralec pritisne tipko za zavijanje
         if (lateralInput !== 0 && !this.isSkiingSoundPlaying) {
             window.startSkiingSound?.();
             this.isSkiingSoundPlaying = true;
         } 
-        // Nehaj zvok, ko smučar spusti tipko za zavijanje
+        // Ustavi zvok, ko igralec spusti tipko za zavijanje
         else if (lateralInput === 0 && this.isSkiingSoundPlaying) {
             window.fadeOutSkiingSound?.();
             this.isSkiingSoundPlaying = false;
@@ -102,7 +102,7 @@ export class SkierController {
         // Posodobi audio (fade out efekt)
         window.updateSkiingAudio?.(dt);
         
-        // === 2. SPEED DYNAMICS ===
+        // 2. SPEED DYNAMICS
         // Zaviranje pri zavijanju (večji kot = več zaviranja)
         const turnIntensity = Math.abs(lateralInput);
         
@@ -120,7 +120,7 @@ export class SkierController {
             );
         }
         
-        // === 3. ROTATION & TILT ===
+        // 3. ROTATION & TILT
         // Target rotation based on input
         this.targetRotationY = -lateralInput * 0.6; // Max 35 degrees turn
         
@@ -138,7 +138,7 @@ export class SkierController {
         quat.rotateX(rotationQuat, rotationQuat, this.currentTilt);
         transform.rotation = Array.from(rotationQuat);
         
-        // === 4. LATERAL MOVEMENT ===
+        // 4. LATERAL MOVEMENT
         // Move sideways based on input and current speed
         const lateralMovement = lateralInput * this.lateralSpeed * dt;
         transform.translation[0] += lateralMovement;
@@ -146,11 +146,11 @@ export class SkierController {
         // Clamp to track boundaries
         transform.translation[0] = Math.max(-this.maxX, Math.min(this.maxX, transform.translation[0]));
         
-        // === 5. FORWARD MOVEMENT ===
+        // 5. FORWARD MOVEMENT
         // Move forward at current speed (negative Z direction)
         transform.translation[2] -= this.currentSpeed * dt;
         
-        // === 6. JUMP MECHANICS ===
+        // 6. JUMP MECHANICS
         // Trigger jump on Space press
         if (this.keys['Space'] && !this.isJumping && transform.translation[1] <= this.groundY + 0.01) {
             this.isJumping = true;
