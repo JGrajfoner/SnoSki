@@ -133,6 +133,25 @@
     </div>
     
     <script>
+
+        const music = new Audio('./assets/audio/background.mp3');
+        music.loop = true;
+        music.volume = 0.4;
+
+        function playMusicFromStart() {
+        music.pause();
+        music.currentTime = 0;
+        music.play().catch(() => {});
+    }
+
+        function stopMusic() {
+            music.pause();
+            music.currentTime = 0;
+        }
+
+        window.playMusicFromStart = playMusicFromStart;
+        window.stopMusic = stopMusic;
+
         // Auto-start after 15 seconds
         let countdown = 15;
         const timerElement = document.getElementById('menuTimer');
