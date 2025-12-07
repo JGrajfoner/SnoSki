@@ -136,21 +136,97 @@
 
         const music = new Audio('./assets/audio/background.mp3');
         music.loop = true;
-        music.volume = 0.4;
+        music.volume = 0.2;
+
+        // Sound effects
+        const sounds = {
+            gate: new Audio('./assets/audio/vratca.mp3'),
+            coin: new Audio('./assets/audio/kovanec.mp3'),
+            jump: new Audio('./assets/audio/skok.mp3'),
+            end: new Audio('./assets/audio/konec.mp3'),
+            victory: new Audio('./assets/audio/zmaga.mp3'),
+            skiing_1: new Audio('./assets/audio/smucanje_1.mp3'),
+            skiing_2: new Audio('./assets/audio/smucanje_2.mp3'),
+            skiing_3: new Audio('./assets/audio/smucanje_3.mp3'),
+        };
+
+    
+        let currentSkiingSound = null;
+        let skiingFadeProgress = 0;
+        let skiingStopDelay = 0;
+        const skiingStopDelayDuration = 1.5; // 1.5 sekunde pred fade out
+        const skiingFadeDuration = 0.4; // 400ms fade out
+
+        // Set volumes for sound effects
+        Object.values(sounds).forEach(sound => {
+            sound.volume = 0.8;
+        });
 
         function playMusicFromStart() {
-        music.pause();
-        music.currentTime = 0;
-        music.play().catch(() => {});
-    }
+            music.pause();
+            music.currentTime = 0;
+            music.play().catch(() => {});
+        }
 
         function stopMusic() {
             music.pause();
             music.currentTime = 0;
         }
 
+        function playSound(soundName) {
+            if (sounds[soundName]) {
+                sounds[soundName].currentTime = 0;
+                sounds[soundName].play().catch(() => {});
+            }
+        }
+
+        function startSkiingSound() {
+            // Izberi naključni zvok smučanja
+            const skiingSounds = ['skiing_1', 'skiing_2', 'skiing_3'];
+            const randomName = skiingSounds[Math.floor(Math.random() * skiingSounds.length)];
+            currentSkiingSound = sounds[randomName];
+            
+            // Resetiraj fade in
+            skiingFadeProgress = 0;
+            currentSkiingSound.volume = 0.3;
+            currentSkiingSound.currentTime = 0;
+            currentSkiingSound.play().catch(() => {});
+        }
+
+        function fadeOutSkiingSound() {
+            if (!currentSkiingSound) return;
+            skiingStopDelay = 0; // Začni odštevati zakasnitev
+        }
+
+        function updateSkiingAudio(dt) {
+            if (!currentSkiingSound || currentSkiingSound.paused) return;
+
+            // Če se ne predvaja fade out, počakaj zakasnitev
+            if (skiingStopDelay < skiingStopDelayDuration) {
+                skiingStopDelay += dt;
+                return; // Še ne začni fade out
+            }
+
+            // Počasi zmanjšaj glasnost (fade out)
+            skiingFadeProgress += dt;
+            const fadeRatio = skiingFadeProgress / skiingFadeDuration;
+            
+            if (fadeRatio >= 1.0) {
+                currentSkiingSound.pause();
+                currentSkiingSound.currentTime = 0;
+                skiingFadeProgress = 0;
+                skiingStopDelay = 0;
+            } else {
+                currentSkiingSound.volume = 0.4 * (1 - fadeRatio);
+            }
+        }
+
         window.playMusicFromStart = playMusicFromStart;
         window.stopMusic = stopMusic;
+        window.playSound = playSound;
+        window.startSkiingSound = startSkiingSound;
+        window.fadeOutSkiingSound = fadeOutSkiingSound;
+        window.updateSkiingAudio = updateSkiingAudio;
 
         // Auto-start after 15 seconds
         let countdown = 15;

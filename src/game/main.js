@@ -671,13 +671,13 @@ function startGameFromMenu() {
 // Listen for auto-start event from HTML
 window.addEventListener('startGame', startGameFromMenu);
 
-// Dodaj Enter key za start
+// Dodaj Enter in Space key za start
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Enter' && gameState.showingMenu) {
-        // Start game when Enter is pressed on menu
+    if ((e.code === 'Enter' || e.code === 'Space') && gameState.showingMenu) {
+        // Start game when Enter or Space is pressed on menu
         e.preventDefault();
         startGameFromMenu();
-    } else if (e.code === 'Enter' && !gameState.isPlaying() && !gameState.showingMenu) {
+    } else if ((e.code === 'Enter' || e.code === 'Space') && !gameState.isPlaying() && !gameState.showingMenu) {
         // Restart pri game over
         e.preventDefault();
         document.getElementById('restartButton')?.click();
@@ -766,6 +766,8 @@ function update(t, dt) {
             // Preveri trčenje z drevesi
             const hitTree = checkTreeCollisions(skier, trees);
             if (hitTree) {
+                window.playSound?.('end');
+                window.stopMusic?.();
                 gameState.gameOver('tree');
                 console.log('Hit a tree!');
                 return;
@@ -777,6 +779,8 @@ function update(t, dt) {
                 // Ko smučarjev Z gre za z vratc (z je negativen, skierZ bo manjši ali enak)
                 // Najprej preveri TRK s palico
                 if (checkGateCollision(skier, pair)) {
+                    window.playSound?.('end');
+                    window.stopMusic?.();
                     pair.passed = true;
                     gameState.gameOver('gate');   // Zadel si vratca
                     return;
@@ -787,8 +791,11 @@ function update(t, dt) {
                     if (checkGatePassing(skier, pair)) {
                         pair.passed = true;
                         pair.flashTime = pair.flashDuration;
+                        window.playSound?.('gate');
                         gameState.gatePassed();
                     } else {
+                        window.playSound?.('end');
+                        window.stopMusic?.();
                         pair.passed = true;
                         gameState.gameOver('miss-gate');
                         return;
@@ -799,13 +806,15 @@ function update(t, dt) {
             // Preveri trčenje z ovirami (kamni)
             const hitObstacle = checkObstacleCollisions(skier, obstacles);
             if (hitObstacle) {
+                window.playSound?.('end');
+                window.stopMusic?.();
                 gameState.gameOver('obstacle');
                 console.log('Hit an obstacle!');
                 return;
             }
         }
 
-         // --- COIN COLLISION ---
+        // --- COIN COLLISION ---
         for (const coin of coins) {
             if (coin.collected) continue;
 
@@ -819,12 +828,14 @@ function update(t, dt) {
                 coin.collected = true;
                 coinsToRemove.push(coin);   // mark for removal
                 gameState.coins++;
-
+                window.playSound?.('coin');
                 console.log("Coin collected! Total:", gameState.coins);
             }
         }        
-        // Preveri, če je smučar prečkal ciljno črto
+            // Preveri, če je smučar prečkal ciljno črto
         if (skierTransform.translation[2] <= finishZ) {
+            window.playSound?.('victory');
+            window.stopMusic?.();
             gameState.gameOver('finish');
             console.log('Finished the course!');
             return;

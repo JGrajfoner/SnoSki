@@ -46,6 +46,10 @@ export class SkierController {
         
         this.keys = {};
         
+        // Sledenje prejšnjega lateralnega inputa za detekcijo spremembe
+        this.prevLateralInput = 0;
+        this.isSkiingSoundPlaying = false;
+        
         this.initHandlers();
     }
     
@@ -82,6 +86,21 @@ export class SkierController {
         if (this.keys['KeyD'] || this.keys['ArrowRight']) {
             lateralInput += 1;
         }
+        
+        // === SKIING SOUND ===
+        // Začni zvok, ko smučar prvič pritisne tipko za zavijanje
+        if (lateralInput !== 0 && !this.isSkiingSoundPlaying) {
+            window.startSkiingSound?.();
+            this.isSkiingSoundPlaying = true;
+        } 
+        // Nehaj zvok, ko smučar spusti tipko za zavijanje
+        else if (lateralInput === 0 && this.isSkiingSoundPlaying) {
+            window.fadeOutSkiingSound?.();
+            this.isSkiingSoundPlaying = false;
+        }
+        
+        // Posodobi audio (fade out efekt)
+        window.updateSkiingAudio?.(dt);
         
         // === 2. SPEED DYNAMICS ===
         // Zaviranje pri zavijanju (večji kot = več zaviranja)
@@ -137,6 +156,7 @@ export class SkierController {
         if (this.keys['Space'] && !this.isJumping && transform.translation[1] <= this.groundY + 0.01) {
             this.isJumping = true;
             this.jumpVelocity = this.jumpForce;
+            window.playSound?.('jump');
         }
         
         // Apply jump physics
@@ -170,6 +190,9 @@ export class SkierController {
         this.isJumping = false;
         this.jumpVelocity = 0;
         this.rampUpTime = 0; // Resetuj ramp-up timer
+        this.prevLateralInput = 0;
+        this.isSkiingSoundPlaying = false;
+        window.fadeOutSkiingSound?.(); // Zaustavi smučanja zvok pri restartu
     }
     
     keydownHandler(e) {
