@@ -140,7 +140,7 @@ export class GameState {
         if (this.distance > this.bestDistance) {
             this.bestDistance = this.distance;
             this.bestRunPath = this.currentRunPath.slice();
-            console.log(`🏆 New best distance: ${this.bestDistance}m`);
+            console.log(`New best distance: ${this.bestDistance}m`);
         }
         
         this.currentRunPath = [];
