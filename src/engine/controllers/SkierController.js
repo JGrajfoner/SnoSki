@@ -3,14 +3,14 @@ import { quat } from 'glm';
 
 export class SkierController {
     constructor(entity, domElement, {
-        maxSpeed = 40,            // maksimalna hitrost (povečana z 25)
-        minSpeed = 12,             // minimalna hitrost (povečana z 8)
-        acceleration = 15,         // pospeševanje naprej (povečano z 8)
-        deceleration = 14,        // zaviranje pri zavijanju (povečano z 12)
-        lateralSpeed = 18,        // hitrost levo/desno (povečana z 12)
+        maxSpeed = 40,            // maksimalna hitrost (povečana iz 25)
+        minSpeed = 12,             // minimalna hitrost (povečana iz 8)
+        acceleration = 15,         // pospeševanje naprej (povečano iz 8)
+        deceleration = 14,        // zaviranje pri zavijanju (povečano iz 12)
+        lateralSpeed = 18,        // hitrost levo/desno (povečana iz 12)
         maxX = 25,                // meja na levi in desni strani proge
-        turnRotationSpeed = 5.5,  // hitrost rotacije pri zavijanju (povečana z 3.5)
-        tiltAmount = 0.45,        // nagib smučarja pri zavijanju (povečan z 0.35)
+        turnRotationSpeed = 5.5,  // hitrost rotacije pri zavijanju (povečana iz 3.5)
+        tiltAmount = 0.45,        // nagib smučarja pri zavijanju (povečan iz 0.35)
     } = {}) {
         this.entity = entity;
         this.domElement = domElement;
@@ -122,8 +122,7 @@ export class SkierController {
         
         // === 3. ROTATION & TILT ===
         // Target rotation based on input
-        // Invert sign so positive lateralInput (move right) yields a rightward yaw
-        this.targetRotationY = -lateralInput * 0.6; // Max ~35 degrees turn
+        this.targetRotationY = -lateralInput * 0.6; // Max 35 degrees turn
         
         // Smooth rotation interpolation
         this.currentRotationY += (this.targetRotationY - this.currentRotationY) * this.turnRotationSpeed * dt;
@@ -176,12 +175,12 @@ export class SkierController {
         }
     }
     
-    // Get current speed for external use (e.g., UI display)
+    // Get current speed for external use
     getCurrentSpeed() {
         return this.currentSpeed;
     }
     
-    // Reset physics state (useful for game restart)
+    // Reset physics state
     reset() {
         this.currentSpeed = this.startMinSpeed; // Nazaj na počasen start
         this.targetRotationY = 0;
@@ -189,10 +188,10 @@ export class SkierController {
         this.currentTilt = 0;
         this.isJumping = false;
         this.jumpVelocity = 0;
-        this.rampUpTime = 0; // Resetuj ramp-up timer
+        this.rampUpTime = 0;
         this.prevLateralInput = 0;
         this.isSkiingSoundPlaying = false;
-        window.fadeOutSkiingSound?.(); // Zaustavi smučanja zvok pri restartu
+        window.fadeOutSkiingSound?.(); // ustavi zvok smučanja pri restartu
     }
     
     keydownHandler(e) {
@@ -203,7 +202,6 @@ export class SkierController {
         this.keys[e.code] = false;
     }
     
-    // Cleanup method (opcijsko)
     destroy() {
         const doc = this.domElement.ownerDocument;
         doc.removeEventListener('keydown', this.keydownHandler);

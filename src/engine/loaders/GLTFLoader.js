@@ -216,7 +216,7 @@ export class GLTFLoader {
             options.metalnessTexture = this.loadTexture(pbr.metallicRoughnessTexture.index);
             options.roughnessTexture = this.loadTexture(pbr.metallicRoughnessTexture.index);
 
-            // Če še vedno nimamo baseTexture, ga uporabi kot fallback
+            // Če še vedno nimamo baseTexture, uporabi kot fallback
             if (!options.baseTexture) {
                 options.baseTexture = this.loadTexture(pbr.metallicRoughnessTexture.index);
                 options.baseTexture.isSRGB = true;
@@ -227,8 +227,7 @@ export class GLTFLoader {
         options.metalnessFactor = pbr.metallicFactor ?? 0;
         options.roughnessFactor = pbr.roughnessFactor ?? 1;
     }
-
-    // Če PBR sploh ni ali še vedno nimamo baseTexture → uporabi prvo teksturo v sceni
+    
     if (!options.baseTexture && this.gltf.textures && this.gltf.textures.length > 0) {
         options.baseTexture = this.loadTexture(0);
         options.baseTexture.isSRGB = true;
