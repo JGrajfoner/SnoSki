@@ -10,6 +10,9 @@ export class GameState {
 
         this.currentRunPath = [];
         this.lastRunPath = [];
+        
+        this.bestDistance = 0; // Track best distance for ghost replay
+        this.bestRunPath = []; // Store path of best run
 
         this.createUI();
     }
@@ -130,7 +133,16 @@ export class GameState {
         
         this.state = 'gameover';
 
+        // Save current run to lastRunPath for immediate replay
         this.lastRunPath = this.currentRunPath.slice();
+        
+        // Check if current run is better than best run (by distance)
+        if (this.distance > this.bestDistance) {
+            this.bestDistance = this.distance;
+            this.bestRunPath = this.currentRunPath.slice();
+            console.log(`🏆 New best distance: ${this.bestDistance}m`);
+        }
+        
         this.currentRunPath = [];
         
         // Prikaži game over overlay

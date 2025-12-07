@@ -638,8 +638,8 @@ document.getElementById('restartButton')?.addEventListener('click', () => {
     // Reset skier physics
     skierController.reset();
 
-    //aktiviraj duha, če imamo zadnjo rundo igre
-    if (gameState.lastRunPath && gameState.lastRunPath.length > 0) {
+    //aktiviraj duha, če imamo najboljšo rundo igre
+    if (gameState.bestRunPath && gameState.bestRunPath.length > 0) {
         ghostSkier = createGhostSkier();
         scene.push(ghostSkier);
         ghostIndex = 0;
@@ -842,7 +842,7 @@ function update(t, dt) {
         }
     }
 
-    // --- REMOVE COLLECTED COINS SAFELY ---
+    // remove collected coins safely
     if (coinsToRemove.length > 0) {
         for (const coin of coinsToRemove) {
             const idxScene = scene.indexOf(coin);
@@ -854,9 +854,9 @@ function update(t, dt) {
         coinsToRemove.length = 0;
     }
 
-    // --- GHOST REPLAY ---
-    if (ghostSkier && gameState.lastRunPath) {
-        const frame = gameState.lastRunPath[ghostIndex];
+    // ghost replay - show best run
+    if (ghostSkier && gameState.bestRunPath) {
+        const frame = gameState.bestRunPath[ghostIndex];
         if (frame) {
             const tr = ghostSkier.getComponentOfType(Transform);
             tr.translation[0] = frame.x;
