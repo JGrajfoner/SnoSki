@@ -11,8 +11,8 @@ SnoSki/
 │   │   ├── core/            # Core components (Entity, Camera, Transform, Material, etc.)
 │   │   ├── renderers/       # Rendering pipeline (UnlitRenderer with WGSL shaders)
 │   │   ├── loaders/         # Resource loaders (GLTF, Image, JSON)
-│   │   ├── systems/         # Game systems (Update, Resize, ParticleSystem, TrailSystem)
-│   │   ├── controllers/     # Input controllers (SkierController, FirstPerson, Orbit, etc.)
+│   │   ├── systems/         # Game systems (Update, Resize, ParticleSystem)
+│   │   ├── controllers/     # Input controllers (SkierController)
 │   │   ├── animators/       # Animation utilities (EasingFunctions, LinearAnimator, etc.)
 │   │   ├── WebGPU.js        # WebGPU device initialization
 │   │   └── WebGPUMipmaps.js # Mipmap generation for textures
@@ -20,7 +20,8 @@ SnoSki/
 │   │   ├── index.html       # Entry point
 │   │   ├── main.js          # Scene setup, entities, game loop
 │   │   ├── GameState.js     # Game state management
-│   │   └── CollisionDetection.js # Collision detection logic
+│   │   ├── CollisionDetection.js # Collision detection logic
+│   │   └── assets/audio/    # Sound effects and music
 │   ├── lib/                 # Third-party libraries (dat.gui, glMatrix)
 │   └── models/              # 3D models and textures
 │       ├── skier/           # Player model with textures
