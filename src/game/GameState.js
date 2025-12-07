@@ -1,7 +1,7 @@
 export class GameState {
     constructor() {
         this.state = 'playing'; // 'playing', 'gameover'
-        this.showingMenu = true; // Ali prikazujemo začetni menu
+        this.showingMenu = true; // show menu at start?
         this.score = 0; // reserved for future
         this.distance = 0;
         this.gatesPassed = 0;
@@ -139,7 +139,7 @@ export class GameState {
         // Update title based on finish or crash
         const titleElement = this.gameOverOverlay.querySelector('h1');
         if (titleElement) {
-            titleElement.textContent = reason === 'finish' ? 'CILJ!' : 'KONEC IGRE';
+            titleElement.textContent = reason === 'finish' ? 'CILJ!' : 'KONEC IGRE!';
             titleElement.style.color = reason === 'finish' ? '#00ff00' : 'white';
         }
         
@@ -159,8 +159,8 @@ export class GameState {
             const messages = {
                 'tree': 'Zadel si drevo!',
                 'gate': 'Zadel si vratca!',
-                'miss-gate': 'Zgrešil si vratca',
-                'finish': 'Čestitamo! Končal si progo!',
+                'miss-gate': 'Zgrešil si vratca!',
+                'finish': 'Čestitamo! Prismučal si do cilja!',
                 'obstacle': 'Zadel si hlod!',
             };
             failReason.textContent = messages[reason] ?? 'Konec igre.';
